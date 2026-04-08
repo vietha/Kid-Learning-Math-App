@@ -55,6 +55,8 @@
 
   <script src="app.js"></script>
   <script>
+    requireLogin();
+
     const params     = getParams();
     const year       = params.year || 2;
     const COUNT      = Settings.get('testCount');

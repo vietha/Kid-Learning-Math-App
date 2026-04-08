@@ -321,6 +321,14 @@ const Accounts = {
   isLoggedIn()  { return !!this.currentUser(); }
 };
 
+function requireLogin() {
+  if (!Accounts.isLoggedIn()) {
+    window.location.replace('login.html');
+    return false;
+  }
+  return true;
+}
+
 // ============================================================
 // SETTINGS  (per-user, namespaced)
 // ============================================================

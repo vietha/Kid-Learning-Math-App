@@ -17,6 +17,17 @@
       <div style="width:60px"></div>
     </div>
 
+    <div class="card current-kid-card">
+      <div class="section-label" style="margin-bottom:12px">Viewing stats for</div>
+      <div class="current-kid-row">
+        <div>
+          <div id="current-kid-name" class="current-kid-name">Kid</div>
+          <div class="current-kid-subtitle">Only this kid's history and analytics are shown here.</div>
+        </div>
+        <button id="btn-switch-kid" class="switch-kid-btn">Switch Kid</button>
+      </div>
+    </div>
+
     <!-- ── Empty state ─────────────────────────────── -->
     <div id="empty-state" class="hidden" style="text-align:center;padding:40px 0;width:100%">
       <div style="font-size:4rem">📋</div>
@@ -88,6 +99,13 @@
 
   <script src="app.js"></script>
   <script>
+    requireLogin();
+    document.getElementById('current-kid-name').textContent = Storage.getPlayerName();
+    document.getElementById('btn-switch-kid').addEventListener('click', () => {
+      Accounts.logout();
+      window.location.replace('login.html');
+    });
+
     const history  = Storage.getTestHistory();
     const analytics = computeHistoryAnalytics(history);
 

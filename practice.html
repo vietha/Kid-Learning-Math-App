@@ -60,6 +60,8 @@
 
   <script src="app.js"></script>
   <script>
+    requireLogin();
+
     const params   = getParams();
     const year     = params.year || 2;
     const op       = params.op   || 'add';

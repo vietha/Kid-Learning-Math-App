@@ -26,17 +26,15 @@
       <div class="app-subtitle">NZ Primary School Maths Practice</div>
     </div>
 
-    <div class="card">
-      <div class="section-label" style="margin-bottom:12px">What's your name?</div>
-      <input
-        id="name-input"
-        class="name-input"
-        type="text"
-        placeholder="Type your name… (optional)"
-        maxlength="20"
-        autocomplete="off"
-        spellcheck="false"
-      >
+    <div class="card current-kid-card">
+      <div class="section-label" style="margin-bottom:12px">Who's playing?</div>
+      <div class="current-kid-row">
+        <div>
+          <div id="current-kid-name" class="current-kid-name">Kid</div>
+          <div class="current-kid-subtitle">History, scores, and settings stay saved for this kid.</div>
+        </div>
+        <button id="btn-switch-kid" class="switch-kid-btn">Switch Kid</button>
+      </div>
     </div>
 
     <div class="card">
@@ -156,12 +154,14 @@
 
   <script src="app.js"></script>
   <script>
-    let selectedYear = null;
+    requireLogin();
 
-    // --- Restore saved name ---
-    const nameInput = document.getElementById('name-input');
-    nameInput.value = Storage.getPlayerName();
-    nameInput.addEventListener('input', () => Storage.setPlayerName(nameInput.value.trim()));
+    let selectedYear = null;
+    document.getElementById('current-kid-name').textContent = Storage.getPlayerName();
+    document.getElementById('btn-switch-kid').addEventListener('click', () => {
+      Accounts.logout();
+      window.location.replace('login.html');
+    });
 
     // --- Section navigation ---
     function show(id) {
