@@ -11,6 +11,18 @@ An engaging, touch-friendly maths app with cheerful visuals, year-based levels, 
 
 ---
 
+## App Preview
+
+<p align="center">
+  <img src="images/math-champions-home-page.png" alt="Math Champions home page" width="31%">
+  <img src="images/math-champions-settings-page.png" alt="Math Champions settings page" width="31%">
+  <img src="images/math-champions-stats-page.png" alt="Math Champions stats page" width="31%">
+</p>
+
+From kid login and year-level selection to settings, score tracking, and per-kid analytics, the app is designed to feel simple, cheerful, and easy to use on tablets and phones.
+
+---
+
 ## Quick Start
 
 1. Download or clone this folder to your computer
@@ -33,7 +45,9 @@ An engaging, touch-friendly maths app with cheerful visuals, year-based levels, 
 | Instant feedback | Animations and sounds after every answer (Practice only) |
 | Star ratings | 1–3 stars based on your score |
 | Confetti | Launched automatically for a 3-star result |
-| Best scores | Saved in your browser with no account needed |
+| Multi-kid mode | Simple name + age login for separate kid profiles |
+| Best scores | Saved in your browser for each kid separately |
+| History & analytics | Per-kid test history, recent trends, and operation accuracy |
 | Touch-friendly | Large numpad buttons — great on tablets and phones |
 | Keyboard support | Type numbers + press Enter on desktop |
 
@@ -60,9 +74,14 @@ An engaging, touch-friendly maths app with cheerful visuals, year-based levels, 
 ## How to Play
 
 ### Home screen (`index.html`)
-1. Type your name (optional — it's saved for next time)
-2. Tap your year level button
+1. Log in as a kid using name + age
+2. Tap a year level
 3. Choose **Practice** or **Mixed Test**
+
+### Login screen (`login.html`)
+- Add a kid with a name and age
+- Tap a kid card to log in
+- Each kid gets separate settings, best scores, and analytics
 
 ### Practice Mode (`practice.html`)
 - Pick one operation: + − × ÷
@@ -82,16 +101,24 @@ An engaging, touch-friendly maths app with cheerful visuals, year-based levels, 
 - 🎉 Confetti for 80 %+ (3 stars)
 - Hit **Try Again** to replay the same mode, or **Go Home** to switch
 
+### History & Stats (`history.html`)
+- View test history for the current kid
+- See average score, average time, and recent results
+- Track strongest and weakest operations over time
+
 ---
 
 ## File Structure
 
 ```
 Kid-Learning-Math-App/
+├── login.html        ← Kid login and profile selection
 ├── index.html        ← Home screen (name entry, year & mode selector)
 ├── practice.html     ← Single-operation practice (instant feedback)
 ├── test.html         ← Mixed test with optional timer
 ├── results.html      ← Score, stars, confetti, navigation
+├── history.html      ← Per-kid history and analytics dashboard
+├── images/           ← README screenshots and preview assets
 ├── style.css         ← Shared design system
 ├── app.js            ← Question engine, timer, audio, localStorage
 └── project-plan.md   ← Original project specification
