@@ -3,6 +3,12 @@
 A browser-based maths practice app for New Zealand primary school children (Year 2–6).
 No installation. No sign-up. Just open and play.
 
+<p align="center">
+  <img src="images/math-champions-home-page.png" alt="Math Champions home page" width="420">
+</p>
+
+An engaging, touch-friendly maths app with cheerful visuals, year-based levels, and quick practice sessions for young learners.
+
 ---
 
 ## Quick Start
