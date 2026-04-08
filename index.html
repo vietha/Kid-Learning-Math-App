@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Math Champions 🦉</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- =====================================================
+       SECTION 1: Welcome
+       ===================================================== -->
+  <div id="sec-welcome" class="screen" style="padding-top:16px">
+
+    <!-- History + Settings buttons -->
+    <div style="width:100%;display:flex;justify-content:flex-end;gap:8px">
+      <button id="btn-history" class="settings-btn" title="History & Stats">📊</button>
+      <button id="btn-settings" class="settings-btn" title="Settings">⚙️</button>
+    </div>
+
+    <div class="mascot">🦉</div>
+
+    <div>
+      <div class="app-title">Math Champions</div>
+      <div class="app-subtitle">NZ Primary School Maths Practice</div>
+    </div>
+
+    <div class="card">
+      <div class="section-label" style="margin-bottom:12px">What's your name?</div>
+      <input
+        id="name-input"
+        class="name-input"
+        type="text"
+        placeholder="Type your name… (optional)"
+        maxlength="20"
+        autocomplete="off"
+        spellcheck="false"
+      >
+    </div>
+
+    <div class="card">
+      <div class="section-label" style="margin-bottom:14px">Pick your year level</div>
+      <div class="year-grid">
+        <button class="year-btn" data-year="2"><span style="font-size:0.75rem">Year</span><span style="font-size:1.4rem;font-weight:900">2</span></button>
+        <button class="year-btn" data-year="3"><span style="font-size:0.75rem">Year</span><span style="font-size:1.4rem;font-weight:900">3</span></button>
+        <button class="year-btn" data-year="4"><span style="font-size:0.75rem">Year</span><span style="font-size:1.4rem;font-weight:900">4</span></button>
+        <button class="year-btn" data-year="5"><span style="font-size:0.75rem">Year</span><span style="font-size:1.4rem;font-weight:900">5</span></button>
+        <button class="year-btn" data-year="6"><span style="font-size:0.75rem">Year</span><span style="font-size:1.4rem;font-weight:900">6</span></button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =====================================================
+       SECTION 2: Year info + mode selection
+       ===================================================== -->
+  <div id="sec-level" class="screen hidden">
+
+    <button class="back-btn" id="back-to-welcome">← Back</button>
+
+    <div id="year-info-card" class="year-info"><!-- filled by JS --></div>
+
+    <div class="section-label">Choose your mode</div>
+
+    <div class="mode-btns">
+      <button class="mode-btn practice" id="btn-practice">
+        <span class="mode-icon">📚</span>
+        <span>Practice</span>
+      </button>
+      <button class="mode-btn test" id="btn-test">
+        <span class="mode-icon">📝</span>
+        <span>Mixed Test</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- =====================================================
+       SECTION 3: Operation selector (for Practice)
+       ===================================================== -->
+  <div id="sec-ops" class="screen hidden">
+
+    <button class="back-btn" id="back-to-level">← Back</button>
+
+    <div class="mascot" style="font-size:56px;animation:none">🎯</div>
+    <div class="section-label">Choose an operation</div>
+
+    <div id="op-grid" class="op-grid"><!-- filled by JS --></div>
+
+  </div>
+
+  <!-- =====================================================
+       SECTION 4: Settings
+       ===================================================== -->
+  <div id="sec-settings" class="screen hidden">
+
+    <button class="back-btn" id="back-from-settings">✕ Cancel</button>
+
+    <div class="mascot" style="font-size:56px;animation:none">⚙️</div>
+    <div class="section-label">Settings</div>
+
+    <div class="card">
+      <div class="setting-label">Questions — Practice</div>
+      <div class="chip-group" data-setting="practiceCount">
+        <button class="chip" data-value="5">5</button>
+        <button class="chip" data-value="10">10</button>
+        <button class="chip" data-value="15">15</button>
+        <button class="chip" data-value="20">20</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="setting-label">Questions — Mixed Test</div>
+      <div class="chip-group" data-setting="testCount">
+        <button class="chip" data-value="5">5</button>
+        <button class="chip" data-value="10">10</button>
+        <button class="chip" data-value="15">15</button>
+        <button class="chip" data-value="20">20</button>
+        <button class="chip" data-value="50">50</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="setting-label">Mixed Test — Difficulty</div>
+      <div class="chip-group" data-setting="difficulty">
+        <button class="chip" data-value="easy">🌱 Easy</button>
+        <button class="chip" data-value="medium">⭐ Medium</button>
+        <button class="chip" data-value="hard">🔥 Hard</button>
+        <button class="chip" data-value="talent">🏆 Talent</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="setting-label">Timer — Seconds per Question</div>
+      <div class="chip-group" data-setting="timerSeconds">
+        <button class="chip" data-value="30">30 s</button>
+        <button class="chip" data-value="60">60 s</button>
+        <button class="chip" data-value="90">90 s</button>
+        <button class="chip" data-value="120">120 s</button>
+        <button class="chip" data-value="0">∞ No limit</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="setting-label">Sound</div>
+      <div class="chip-group" data-setting="soundEnabled">
+        <button class="chip" data-value="true">🔊 On</button>
+        <button class="chip" data-value="false">🔇 Off</button>
+      </div>
+    </div>
+
+    <button id="btn-save-settings" class="settings-save-btn">💾 Save Settings</button>
+
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let selectedYear = null;
+
+    // --- Restore saved name ---
+    const nameInput = document.getElementById('name-input');
+    nameInput.value = Storage.getPlayerName();
+    nameInput.addEventListener('input', () => Storage.setPlayerName(nameInput.value.trim()));
+
+    // --- Section navigation ---
+    function show(id) {
+      ['sec-welcome', 'sec-level', 'sec-ops', 'sec-settings'].forEach(s =>
+        document.getElementById(s).classList.toggle('hidden', s !== id)
+      );
+      window.scrollTo(0, 0);
+    }
+
+    // --- Settings (draft pattern: changes only saved on "Save Settings") ---
+    const SETTING_KEYS = ['practiceCount', 'testCount', 'difficulty', 'timerSeconds', 'soundEnabled'];
+    let draft = {};
+
+    function parseChipValue(v) {
+      if (v === 'true')  return true;
+      if (v === 'false') return false;
+      const n = Number(v);
+      return isNaN(n) ? v : n;   // keep as string if not numeric (e.g. 'easy')
+    }
+
+    // Wire chip clicks to update draft only — not saved yet
+    document.querySelectorAll('.chip-group').forEach(group => {
+      const key = group.dataset.setting;
+      group.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          draft[key] = parseChipValue(chip.dataset.value);
+          group.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+          chip.classList.add('selected');
+        });
+      });
+    });
+
+    // Load saved settings into draft and refresh chip UI
+    function openSettings() {
+      SETTING_KEYS.forEach(key => { draft[key] = Settings.get(key); });
+      document.querySelectorAll('.chip-group').forEach(group => {
+        const current = String(draft[group.dataset.setting]);
+        group.querySelectorAll('.chip').forEach(chip => {
+          chip.classList.toggle('selected', chip.dataset.value === current);
+        });
+      });
+      show('sec-settings');
+    }
+
+    // Save → persist draft to localStorage, go home
+    document.getElementById('btn-save-settings').addEventListener('click', () => {
+      SETTING_KEYS.forEach(key => Settings.set(key, draft[key]));
+      show('sec-welcome');
+    });
+
+    // Cancel → discard draft, go home
+    document.getElementById('back-from-settings').addEventListener('click', () => show('sec-welcome'));
+
+    document.getElementById('btn-settings').addEventListener('click', openSettings);
+    document.getElementById('btn-history').addEventListener('click', () => { window.location.href = 'history.html'; });
+
+    // --- Year selection ---
+    document.querySelectorAll('.year-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedYear = Number(btn.dataset.year);
+        const cfg = YEAR_CONFIG[selectedYear];
+
+        const pills = cfg.ops
+          .map(op => `<span class="op-pill ${op}">${OP_SYMBOLS[op]} ${OP_NAMES[op]}</span>`)
+          .join('');
+
+        document.getElementById('year-info-card').innerHTML = `
+          <div class="year-info-title">
+            ${cfg.label}
+            <span style="font-weight:600;color:var(--text-light);font-size:0.95rem">(Age ${cfg.age})</span>
+          </div>
+          <div class="year-info-range">🔢 Numbers up to ${cfg.max.toLocaleString()}</div>
+          <div class="op-pills">${pills}</div>
+        `;
+
+        show('sec-level');
+      });
+    });
+
+    // --- Back buttons ---
+    document.getElementById('back-to-welcome').addEventListener('click', () => show('sec-welcome'));
+    document.getElementById('back-to-level').addEventListener('click',   () => show('sec-level'));
+
+    // --- Practice → show operation selector ---
+    document.getElementById('btn-practice').addEventListener('click', () => {
+      const cfg = YEAR_CONFIG[selectedYear];
+      const grid = document.getElementById('op-grid');
+
+      grid.innerHTML = cfg.ops.map(op => `
+        <button class="op-btn ${op}" data-op="${op}">
+          <span>${OP_SYMBOLS[op]}</span>
+          <span class="op-name">${OP_NAMES[op]}</span>
+        </button>
+      `).join('');
+
+      grid.querySelectorAll('.op-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          window.location.href = buildURL('practice.html', { year: selectedYear, op: btn.dataset.op });
+        });
+      });
+
+      show('sec-ops');
+    });
+
+    // --- Mixed Test → go to test.html ---
+    document.getElementById('btn-test').addEventListener('click', () => {
+      window.location.href = buildURL('test.html', { year: selectedYear });
+    });
+  </script>
+
+</body>
+</html>

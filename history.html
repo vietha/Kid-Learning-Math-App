@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History & Stats — Math Champions</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="screen" style="padding-top:16px;gap:16px">
+
+    <!-- Header -->
+    <div style="width:100%;display:flex;align-items:center;justify-content:space-between">
+      <button class="back-btn" onclick="window.location.href='index.html'">← Home</button>
+      <div class="app-title" style="font-size:1.3rem;-webkit-text-fill-color:unset;color:var(--text)">📊 Stats</div>
+      <div style="width:60px"></div>
+    </div>
+
+    <!-- ── Empty state ─────────────────────────────── -->
+    <div id="empty-state" class="hidden" style="text-align:center;padding:40px 0;width:100%">
+      <div style="font-size:4rem">📋</div>
+      <div style="font-size:1.1rem;font-weight:800;color:var(--text);margin-top:12px">No tests yet!</div>
+      <div style="font-size:0.9rem;font-weight:600;color:var(--text-light);margin-top:6px">
+        Complete a Mixed Test to see your stats here.
+      </div>
+      <button class="settings-save-btn" style="margin-top:24px;max-width:280px"
+              onclick="window.location.href='index.html'">Let's Go! 🚀</button>
+    </div>
+
+    <!-- ── Main content ───────────────────────────── -->
+    <div id="content" class="hidden" style="width:100%;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Summary stat row -->
+      <div class="stat-row">
+        <div class="stat-card">
+          <div id="stat-total" class="stat-value">0</div>
+          <div class="stat-label">Tests</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-avg" class="stat-value">—</div>
+          <div class="stat-label">Avg score</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-time" class="stat-value">—</div>
+          <div class="stat-label">Avg time</div>
+        </div>
+      </div>
+
+      <!-- Operation accuracy -->
+      <div class="card" id="op-accuracy-card">
+        <div class="setting-label" style="margin-bottom:14px">Operation accuracy (all time)</div>
+        <div id="op-accuracy-rows"></div>
+        <div id="op-no-data" class="hidden" style="color:var(--text-light);font-size:0.9rem;font-weight:600">
+          Not enough data yet — keep taking tests!
+        </div>
+      </div>
+
+      <!-- Strengths & areas to improve -->
+      <div class="card" id="summary-card">
+        <div class="setting-label" style="margin-bottom:12px">Strengths & areas to improve</div>
+        <div id="summary-content"></div>
+      </div>
+
+      <!-- Recent trend -->
+      <div class="card">
+        <div class="setting-label" style="margin-bottom:12px">Recent results (newest →)</div>
+        <div id="trend-row" class="trend-row"></div>
+        <div class="trend-legend">
+          <span class="trend-dot trend-dot-green" style="width:12px;height:12px"></span> 80%+
+          <span class="trend-dot trend-dot-yellow" style="width:12px;height:12px;margin-left:8px"></span> 50–79%
+          <span class="trend-dot trend-dot-red" style="width:12px;height:12px;margin-left:8px"></span> &lt;50%
+        </div>
+      </div>
+
+      <!-- History list -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="setting-label" style="margin-bottom:0">Test history</div>
+          <button id="btn-clear" class="clear-btn">🗑️ Clear all</button>
+        </div>
+        <div id="history-list"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const history  = Storage.getTestHistory();
+    const analytics = computeHistoryAnalytics(history);
+
+    if (!history.length) {
+      document.getElementById('empty-state').classList.remove('hidden');
+    } else {
+      document.getElementById('content').classList.remove('hidden');
+      renderStats();
+      renderOpAccuracy();
+      renderSummary();
+      renderTrend();
+      renderHistoryList();
+    }
+
+    // ── Summary stats ──────────────────────────────────────────
+    function renderStats() {
+      document.getElementById('stat-total').textContent = analytics.totalTests;
+      document.getElementById('stat-avg').textContent   = analytics.avgPct + '%';
+      document.getElementById('stat-time').textContent  = analytics.avgTime ? formatTime(analytics.avgTime) : '—';
+    }
+
+    // ── Operation accuracy bars ────────────────────────────────
+    function renderOpAccuracy() {
+      const rows = document.getElementById('op-accuracy-rows');
+      const ops  = ['add', 'sub', 'mul', 'div'];
+      const available = ops.filter(op => analytics.opAccuracy[op]);
+
+      if (!available.length) {
+        document.getElementById('op-no-data').classList.remove('hidden');
+        return;
+      }
+
+      rows.innerHTML = available.map(op => {
+        const { pct, correct, total } = analytics.opAccuracy[op];
+        return `
+          <div class="accuracy-row">
+            <span class="op-label-badge op-bg-${op}">${OP_SYMBOLS[op]} ${OP_NAMES[op]}</span>
+            <div class="accuracy-bar-wrap">
+              <div class="accuracy-bar" style="width:${pct}%;background:var(--${op})"></div>
+            </div>
+            <span class="accuracy-pct">${pct}%</span>
+          </div>`;
+      }).join('');
+    }
+
+    // ── Strengths / weaknesses ─────────────────────────────────
+    function renderSummary() {
+      const { strongest, weakest } = analytics;
+      const el = document.getElementById('summary-content');
+
+      if (!strongest) {
+        el.innerHTML = `<div style="color:var(--text-light);font-size:0.9rem;font-weight:600">
+          Keep taking tests to unlock your personalised summary!
+        </div>`;
+        return;
+      }
+
+      let html = '';
+
+      if (strongest) {
+        html += `<div class="summary-item good">
+          ⭐ <strong>Strong at:</strong> ${OP_SYMBOLS[strongest[0]]} ${OP_NAMES[strongest[0]]}
+          — ${strongest[1].pct}% (${strongest[1].correct}/${strongest[1].total})
+        </div>`;
+      }
+
+      if (weakest && weakest[0] !== strongest[0]) {
+        html += `<div class="summary-item needs-work">
+          💪 <strong>Needs practice:</strong> ${OP_SYMBOLS[weakest[0]]} ${OP_NAMES[weakest[0]]}
+          — ${weakest[1].pct}% (${weakest[1].correct}/${weakest[1].total})
+        </div>`;
+      }
+
+      // Tip based on weakest operation
+      if (weakest) {
+        const TIPS = {
+          add: 'Tip: try Easy difficulty and focus on addition first!',
+          sub: 'Tip: practise subtraction in Easy mode — no borrowing to start.',
+          mul: 'Tip: start with the ×2, ×5, ×10 tables in Practice mode.',
+          div: 'Tip: practise division in Easy mode — divisors 2, 5, 10 first.'
+        };
+        html += `<div class="summary-tip">💡 ${TIPS[weakest[0]] || ''}</div>`;
+      }
+
+      el.innerHTML = html;
+    }
+
+    // ── Recent trend dots ──────────────────────────────────────
+    function renderTrend() {
+      const recent    = history.slice(0, 10);           // newest first
+      const container = document.getElementById('trend-row');
+      container.innerHTML = recent.map(t => {
+        const cls = t.pct >= 80 ? 'trend-dot-green' : t.pct >= 50 ? 'trend-dot-yellow' : 'trend-dot-red';
+        return `<div class="trend-dot ${cls}" title="${t.pct}%  —  ${formatDate(t.date)}">
+          <span>${t.pct}%</span>
+        </div>`;
+      }).join('');
+    }
+
+    // ── History list ───────────────────────────────────────────
+    function renderHistoryList() {
+      const container = document.getElementById('history-list');
+      const DIFF_EMOJI = { easy:'🌱', medium:'⭐', hard:'🔥', talent:'🏆' };
+
+      container.innerHTML = history.map((t, i) => {
+        const ops = Object.entries(t.opBreakdown || {})
+          .map(([op, d]) => {
+            const pct = Math.round(d.correct / d.total * 100);
+            const ok  = pct >= 80;
+            return `<span class="hist-op-badge op-bg-${op}" title="${OP_NAMES[op]}: ${d.correct}/${d.total}">
+              ${OP_SYMBOLS[op]} ${d.correct}/${d.total}
+            </span>`;
+          }).join('');
+
+        const stars     = '⭐'.repeat(t.stars || 1);
+        const diffLabel = DIFF_EMOJI[t.difficulty] || '⭐';
+        const divider   = i < history.length - 1 ? 'history-item-divider' : '';
+
+        return `
+          <div class="history-item ${divider}">
+            <div class="history-item-top">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span class="history-year">Year ${t.year}</span>
+                <span class="history-diff">${diffLabel} ${t.difficulty || 'medium'}</span>
+                <span class="history-date">${formatDate(t.date)}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+                <span class="history-score">${t.score}/${t.total}</span>
+                <span style="font-size:0.85rem">${stars}</span>
+              </div>
+            </div>
+            <div class="history-item-bottom">
+              <div class="hist-ops-row">${ops}</div>
+              ${t.timeTaken ? `<span class="history-time">⏱ ${formatTime(t.timeTaken)}</span>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ── Clear history ──────────────────────────────────────────
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      if (confirm('Delete all test history? This cannot be undone.')) {
+        Storage.clearTestHistory();
+        window.location.reload();
+      }
+    });
+  </script>
+
+</body>
+</html>

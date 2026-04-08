@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Math Champions — Who's Playing?</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 1 — Account picker
+       ═══════════════════════════════════════════ -->
+  <div id="sec-pick" class="screen" style="padding-top:24px">
+
+    <div class="mascot">🦉</div>
+    <div class="app-title">Math Champions</div>
+    <div class="app-subtitle">Who's playing today?</div>
+
+    <div id="accounts-grid" class="accounts-grid">
+      <!-- filled by JS -->
+    </div>
+
+    <button id="btn-add" class="add-account-btn">
+      <span style="font-size:1.6rem">＋</span>
+      <span>New kid</span>
+    </button>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 2 — Age entry (login)
+       ═══════════════════════════════════════════ -->
+  <div id="sec-age" class="screen hidden" style="padding-top:20px">
+
+    <button class="back-btn" id="back-to-pick">← Back</button>
+
+    <div id="login-avatar" class="login-avatar-circle">A</div>
+    <div id="login-greeting" class="login-greeting">Hi, Alice! 👋</div>
+    <div class="app-subtitle">Enter your age to log in</div>
+
+    <div class="card" style="text-align:center;width:100%">
+      <div id="age-display" class="age-display">_</div>
+      <div id="age-error"   class="age-error hidden">Wrong age — try again!</div>
+    </div>
+
+    <div class="numpad-wrap">
+      <div class="numpad">
+        <button class="num-btn" data-val="7">7</button>
+        <button class="num-btn" data-val="8">8</button>
+        <button class="num-btn" data-val="9">9</button>
+        <button class="num-btn" data-val="4">4</button>
+        <button class="num-btn" data-val="5">5</button>
+        <button class="num-btn" data-val="6">6</button>
+        <button class="num-btn" data-val="1">1</button>
+        <button class="num-btn" data-val="2">2</button>
+        <button class="num-btn" data-val="3">3</button>
+        <button class="num-btn backspace" id="age-back">⌫</button>
+        <button class="num-btn" data-val="0">0</button>
+        <button class="num-btn submit" id="age-submit">✓</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 3 — Create new account
+       ═══════════════════════════════════════════ -->
+  <div id="sec-create" class="screen hidden" style="padding-top:20px">
+
+    <button class="back-btn" id="back-to-pick2">← Back</button>
+
+    <div class="mascot" style="font-size:56px;animation:none">🌟</div>
+    <div class="section-label">Create your account</div>
+
+    <!-- Name -->
+    <div class="card" style="width:100%">
+      <div class="setting-label" style="margin-bottom:10px">Your name</div>
+      <input
+        id="new-name"
+        class="name-input"
+        type="text"
+        placeholder="Type your name…"
+        maxlength="20"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <div id="name-error" class="age-error hidden" style="margin-top:8px"></div>
+    </div>
+
+    <!-- Age (using numpad) -->
+    <div class="card" style="width:100%;text-align:center">
+      <div class="setting-label" style="margin-bottom:10px">Your age (used to log in)</div>
+      <div id="new-age-display" class="age-display">_</div>
+    </div>
+
+    <div class="numpad-wrap">
+      <div class="numpad">
+        <button class="num-btn" data-val="7" data-for="create">7</button>
+        <button class="num-btn" data-val="8" data-for="create">8</button>
+        <button class="num-btn" data-val="9" data-for="create">9</button>
+        <button class="num-btn" data-val="4" data-for="create">4</button>
+        <button class="num-btn" data-val="5" data-for="create">5</button>
+        <button class="num-btn" data-val="6" data-for="create">6</button>
+        <button class="num-btn" data-val="1" data-for="create">1</button>
+        <button class="num-btn" data-val="2" data-for="create">2</button>
+        <button class="num-btn" data-val="3" data-for="create">3</button>
+        <button class="num-btn backspace" id="create-age-back">⌫</button>
+        <button class="num-btn" data-val="0" data-for="create">0</button>
+        <button class="num-btn submit" id="create-age-submit">✓</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // If already logged in, skip straight to home
+    if (Accounts.isLoggedIn()) window.location.replace('index.html');
+
+    // ── Section navigation ─────────────────────────────────────
+    function show(id) {
+      ['sec-pick', 'sec-age', 'sec-create'].forEach(s =>
+        document.getElementById(s).classList.toggle('hidden', s !== id)
+      );
+      window.scrollTo(0, 0);
+    }
+
+    // ── Render account list ────────────────────────────────────
+    function renderAccounts() {
+      const grid     = document.getElementById('accounts-grid');
+      const accounts = Accounts.getAll();
+
+      if (!accounts.length) {
+        grid.innerHTML = `<p style="color:var(--text-light);font-weight:700;font-size:0.95rem;text-align:center;width:100%">
+          No accounts yet — add one below!
+        </p>`;
+        return;
+      }
+
+      grid.innerHTML = accounts.map(a => `
+        <div class="account-card" data-name="${a.name}">
+          <div class="avatar-circle" style="background:${a.color}">${a.name[0].toUpperCase()}</div>
+          <div class="account-name">${a.name}</div>
+          <button class="delete-account-btn" data-name="${a.name}" title="Remove account">×</button>
+        </div>
+      `).join('');
+
+      // Click card → age entry
+      grid.querySelectorAll('.account-card').forEach(card => {
+        card.addEventListener('click', e => {
+          if (e.target.classList.contains('delete-account-btn')) return;
+          startLogin(card.dataset.name);
+        });
+      });
+
+      // Delete button
+      grid.querySelectorAll('.delete-account-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const name = btn.dataset.name;
+          if (confirm(`Remove ${name}'s account and all their history?`)) {
+            Accounts.remove(name);
+            renderAccounts();
+          }
+        });
+      });
+    }
+
+    // ── Login flow ─────────────────────────────────────────────
+    let loginTarget = null;
+    let ageInput    = '';
+
+    function startLogin(name) {
+      loginTarget = name;
+      ageInput    = '';
+      const acct  = Accounts.find(name);
+
+      document.getElementById('login-avatar').textContent    = name[0].toUpperCase();
+      document.getElementById('login-avatar').style.background = acct ? acct.color : 'var(--primary)';
+      document.getElementById('login-greeting').textContent  = `Hi, ${name}! 👋`;
+      refreshAgeDisplay();
+      document.getElementById('age-error').classList.add('hidden');
+      show('sec-age');
+    }
+
+    function refreshAgeDisplay() {
+      const el = document.getElementById('age-display');
+      el.textContent = ageInput || '_';
+      el.classList.toggle('has-value', ageInput.length > 0);
+    }
+
+    document.querySelectorAll('.num-btn[data-val]:not([data-for])').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (ageInput.length >= 2) return;
+        ageInput += btn.dataset.val;
+        refreshAgeDisplay();
+        playSound('numpad');
+      });
+    });
+
+    document.getElementById('age-back').addEventListener('click', () => {
+      ageInput = ageInput.slice(0, -1);
+      refreshAgeDisplay();
+    });
+
+    document.getElementById('age-submit').addEventListener('click', () => {
+      const acct = Accounts.find(loginTarget);
+      if (!acct) return;
+      if (Number(ageInput) === acct.age) {
+        Accounts.login(loginTarget);
+        window.location.replace('index.html');
+      } else {
+        document.getElementById('age-error').classList.remove('hidden');
+        ageInput = '';
+        refreshAgeDisplay();
+        playSound('wrong');
+      }
+    });
+
+    document.getElementById('back-to-pick').addEventListener('click', () => {
+      loginTarget = null;
+      show('sec-pick');
+    });
+
+    // ── Create account flow ────────────────────────────────────
+    let newAge = '';
+
+    function refreshNewAgeDisplay() {
+      const el = document.getElementById('new-age-display');
+      el.textContent = newAge || '_';
+      el.classList.toggle('has-value', newAge.length > 0);
+    }
+
+    document.getElementById('btn-add').addEventListener('click', () => {
+      newAge = '';
+      document.getElementById('new-name').value = '';
+      document.getElementById('name-error').classList.add('hidden');
+      refreshNewAgeDisplay();
+      show('sec-create');
+    });
+
+    document.getElementById('back-to-pick2').addEventListener('click', () => show('sec-pick'));
+
+    document.querySelectorAll('.num-btn[data-for="create"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (newAge.length >= 2) return;
+        newAge += btn.dataset.val;
+        refreshNewAgeDisplay();
+        playSound('numpad');
+      });
+    });
+
+    document.getElementById('create-age-back').addEventListener('click', () => {
+      newAge = newAge.slice(0, -1);
+      refreshNewAgeDisplay();
+    });
+
+    document.getElementById('create-age-submit').addEventListener('click', createAccount);
+
+    function createAccount() {
+      const nameVal = document.getElementById('new-name').value.trim();
+      const nameErr = document.getElementById('name-error');
+      nameErr.classList.add('hidden');
+
+      if (!nameVal) {
+        nameErr.textContent = 'Please enter your name!';
+        nameErr.classList.remove('hidden');
+        return;
+      }
+      if (Accounts.exists(nameVal)) {
+        nameErr.textContent = `"${nameVal}" already exists. Pick a different name.`;
+        nameErr.classList.remove('hidden');
+        return;
+      }
+      if (!newAge || Number(newAge) < 1 || Number(newAge) > 18) {
+        nameErr.textContent = 'Please enter a valid age (1–18).';
+        nameErr.classList.remove('hidden');
+        return;
+      }
+
+      Accounts.create(nameVal, Number(newAge));
+      Accounts.login(nameVal);
+      window.location.replace('index.html');
+    }
+
+    // Allow pressing Enter in the name field to move to age
+    document.getElementById('new-name').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('new-age-display').scrollIntoView();
+    });
+
+    // ── Init ───────────────────────────────────────────────────
+    renderAccounts();
+  </script>
+
+</body>
+</html>

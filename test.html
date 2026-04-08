@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mixed Test — Math Champions</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div>
+      <div id="progress-text" class="progress-text">Q 1 / 10</div>
+      <div id="elapsed-display" class="elapsed-display">0:00</div>
+    </div>
+    <div class="timer-wrap">
+      <button id="timer-toggle" class="timer-toggle">⏱ Timer OFF</button>
+      <span id="timer-display" class="timer-display hidden">60</span>
+    </div>
+    <span class="op-badge mixed">Mixed</span>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-bar-wrap">
+    <div id="progress-fill" class="progress-bar-fill" style="width:0%"></div>
+  </div>
+
+  <!-- Encouraging message -->
+  <p id="encourage" class="encourage-msg">&nbsp;</p>
+
+  <!-- Question card -->
+  <div id="question-card" class="question-card">
+    <div id="question-text" class="question-text">? + ? = ?</div>
+    <div id="answer-display" class="answer-display">_</div>
+  </div>
+
+  <!-- Numpad -->
+  <div class="numpad-wrap" style="margin-top:16px">
+    <div class="numpad">
+      <button class="num-btn" data-val="7">7</button>
+      <button class="num-btn" data-val="8">8</button>
+      <button class="num-btn" data-val="9">9</button>
+      <button class="num-btn" data-val="4">4</button>
+      <button class="num-btn" data-val="5">5</button>
+      <button class="num-btn" data-val="6">6</button>
+      <button class="num-btn" data-val="1">1</button>
+      <button class="num-btn" data-val="2">2</button>
+      <button class="num-btn" data-val="3">3</button>
+      <button class="num-btn backspace" id="btn-back">⌫</button>
+      <button class="num-btn" data-val="0">0</button>
+      <button class="num-btn submit" id="btn-submit">✓</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const params     = getParams();
+    const year       = params.year || 2;
+    const COUNT      = Settings.get('testCount');
+    const TIMER_SECS = Settings.get('timerSeconds');
+    const difficulty = Settings.get('difficulty');
+
+    const session = new MathSession(year, 'mixed', COUNT, null, difficulty);
+
+    const $progress     = document.getElementById('progress-text');
+    const $fill         = document.getElementById('progress-fill');
+    const $qtext        = document.getElementById('question-text');
+    const $ans          = document.getElementById('answer-display');
+    const $encourage    = document.getElementById('encourage');
+    const $submit       = document.getElementById('btn-submit');
+    const $card         = document.getElementById('question-card');
+    const $timerToggle  = document.getElementById('timer-toggle');
+    const $timerDisplay = document.getElementById('timer-display');
+
+    let answer         = '';
+    let timerEnabled   = false;
+    let timer          = null;
+    let testStartTime  = null;
+    let elapsedInterval = null;
+    const $elapsed     = document.getElementById('elapsed-display');
+
+    function startElapsed() {
+      testStartTime = Date.now();
+      elapsedInterval = setInterval(() => {
+        $elapsed.textContent = formatTime(Math.floor((Date.now() - testStartTime) / 1000));
+      }, 1000);
+    }
+
+    function stopElapsed() {
+      clearInterval(elapsedInterval);
+      return testStartTime ? Math.floor((Date.now() - testStartTime) / 1000) : 0;
+    }
+
+    // Op accent colours for question text
+    const OP_COLORS = { add: '#26de81', sub: '#FC5C65', mul: '#45AAF2', div: '#a55eea' };
+
+    // --- Display helpers ---
+    function refreshDisplay() {
+      $ans.textContent = answer || '_';
+      $ans.classList.toggle('has-value', answer.length > 0);
+    }
+
+    // Hide timer toggle entirely when "No limit" is selected in settings
+    if (TIMER_SECS === 0) $timerToggle.classList.add('hidden');
+
+    // --- Timer toggle ---
+    $timerToggle.addEventListener('click', () => {
+      timerEnabled = !timerEnabled;
+      $timerToggle.textContent = timerEnabled ? '⏱ Timer ON' : '⏱ Timer OFF';
+      $timerToggle.classList.toggle('active', timerEnabled);
+      $timerDisplay.classList.toggle('hidden', !timerEnabled);
+
+      if (timerEnabled) {
+        startTimer();
+      } else {
+        if (timer) { timer.stop(); timer = null; }
+      }
+    });
+
+    function startTimer() {
+      if (timer) timer.stop();
+      timer = new CountdownTimer(
+        TIMER_SECS,
+        remaining => {
+          $timerDisplay.textContent = remaining;
+          $timerDisplay.classList.toggle('warning', remaining <= 10);
+          if (remaining <= 10) playSound('tick');
+        },
+        () => {
+          // Time expired — count as wrong answer
+          advance(-9999);
+        }
+      );
+      $timerDisplay.textContent = TIMER_SECS;
+      $timerDisplay.classList.remove('warning');
+      timer.start();
+    }
+
+    // --- Show a question ---
+    function showQuestion() {
+      const q = session.currentQuestion;
+      if (!q) return;
+
+      answer = '';
+      $submit.disabled = false;
+
+      $qtext.textContent    = q.text;
+      $qtext.style.color    = OP_COLORS[q.op] || 'var(--text)';
+      $progress.textContent = `Q ${session.current + 1} / ${COUNT}`;
+      $fill.style.width     = `${(session.current / COUNT) * 100}%`;
+
+      refreshDisplay();
+
+      if (session.current === 0) {
+        const name = Storage.getPlayerName();
+        $encourage.textContent = name ? `Let's go, ${name}! 🚀` : "Let's go! 🚀";
+      } else {
+        $encourage.textContent = randFrom(ENCOURAGE_MSGS);
+      }
+
+      // Start elapsed stopwatch on first question
+      if (!testStartTime) startElapsed();
+
+      // Bounce in animation
+      $card.classList.remove('animate-bounce-in');
+      void $card.offsetWidth;
+      $card.classList.add('animate-bounce-in');
+
+      if (timerEnabled) startTimer();
+    }
+
+    // --- Advance to next question (no mid-test feedback) ---
+    function advance(given) {
+      if (timer) timer.stop();
+      $submit.disabled = true;
+
+      const val = (given !== undefined) ? given : (answer === '' ? -9999 : Number(answer));
+      session.submitAnswer(val);
+
+      if (session.isFinished) {
+        goToResults();
+      } else {
+        showQuestion();
+      }
+    }
+
+    function submit() {
+      if ($submit.disabled) return;
+      advance();
+    }
+
+    // --- Navigate to results ---
+    function goToResults() {
+      const timeTaken   = stopElapsed();
+      const opBreakdown = computeOpBreakdown(session.answers);
+
+      // Persist wrong questions for the review feature
+      Storage.setWrongQuestions(session.answers.filter(a => !a.correct).map(a => a.question));
+
+      // Save full result to history
+      Storage.saveTestResult({
+        id:          Date.now(),
+        date:        new Date().toISOString(),
+        year,
+        difficulty,
+        score:       session.score,
+        total:       COUNT,
+        pct:         session.percentage,
+        stars:       session.stars,
+        timeTaken,
+        opBreakdown
+      });
+
+      const isNewBest = Storage.setBestScore(year, 'test', session.score, COUNT);
+      window.location.href = buildURL('results.html', {
+        year,
+        mode:  'test',
+        score: session.score,
+        total: COUNT,
+        stars: session.stars,
+        best:  isNewBest ? 1 : 0,
+        time:  timeTaken
+      });
+    }
+
+    // --- Numpad events ---
+    document.querySelectorAll('.num-btn[data-val]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if ($submit.disabled || answer.length >= 6) return;
+        answer += btn.dataset.val;
+        refreshDisplay();
+        playSound('numpad');
+      });
+    });
+
+    document.getElementById('btn-back').addEventListener('click', () => {
+      if ($submit.disabled) return;
+      answer = answer.slice(0, -1);
+      refreshDisplay();
+    });
+
+    $submit.addEventListener('click', submit);
+
+    // --- Keyboard support ---
+    document.addEventListener('keydown', e => {
+      if ($submit.disabled) return;
+      if (e.key >= '0' && e.key <= '9' && answer.length < 6) {
+        answer += e.key; refreshDisplay();
+      } else if (e.key === 'Backspace') {
+        answer = answer.slice(0, -1); refreshDisplay();
+      } else if (e.key === 'Enter') {
+        submit();
+      }
+    });
+
+    // --- Start ---
+    showQuestion();
+  </script>
+
+</body>
+</html>

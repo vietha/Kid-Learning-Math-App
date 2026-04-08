@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results — Math Champions</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Confetti canvas (behind everything, pointer-events none) -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="results-screen" style="padding-top:32px">
+
+    <div id="result-mascot" class="mascot" style="animation:none">🦉</div>
+
+    <div id="result-msg" class="results-msg">Well done!</div>
+
+    <!-- Stars -->
+    <div class="stars-row">
+      <span class="star" id="star-1">⭐</span>
+      <span class="star" id="star-2">⭐</span>
+      <span class="star" id="star-3">⭐</span>
+    </div>
+
+    <!-- Score card -->
+    <div class="card" style="text-align:center">
+      <div id="score-text"   class="score-text">— / —</div>
+      <div id="score-detail" class="score-detail"></div>
+      <div id="time-taken"   class="time-taken hidden"></div>
+      <div id="best-badge"   class="best-score-badge hidden">🏆 New Best Score!</div>
+    </div>
+
+    <!-- Per-operation breakdown (test mode only) -->
+    <div id="op-breakdown" class="card hidden">
+      <div class="setting-label" style="margin-bottom:14px">This test — by operation</div>
+      <div id="op-breakdown-rows"></div>
+    </div>
+
+    <!-- Navigation buttons -->
+    <div class="result-btns">
+      <button class="result-btn try-again" id="btn-try">🔄 Try Again</button>
+      <button class="result-btn go-home"   id="btn-home">🏠 Go Home</button>
+    </div>
+
+    <!-- Review wrong answers (only shown after a test with at least one wrong answer) -->
+    <button class="result-btn review hidden" id="btn-review">
+      📖 Practice Wrong Answers
+    </button>
+
+    <!-- Link to history page (test mode only) -->
+    <button class="result-btn history-link hidden" id="btn-history">
+      📊 View History & Stats
+    </button>
+
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const params = getParams();
+    const { year, op, mode, score, total, stars, best, time } = params;
+
+    const safeScore = score ?? 0;
+    const safeTotal = total ?? 10;
+    const safeStars = Math.min(3, Math.max(1, stars ?? 1));
+    const pct       = Math.round((safeScore / safeTotal) * 100);
+
+    // Score display
+    document.getElementById('score-text').textContent = `${safeScore} / ${safeTotal}`;
+
+    // Result message
+    const MSGS = {
+      3: ["You're a Math Champion! 🏆", 'Amazing work! 🎉', 'Outstanding! 🌟', 'Perfect practice! ✨'],
+      2: ['Good work! 👏', 'Well done! 💪', 'Getting there! 🚀', 'Nice effort! ⭐'],
+      1: ['Keep practising! 💡', 'You can do it! 🌱', "Every mistake is learning! 📚", "Don't give up! 💪"]
+    };
+    document.getElementById('result-msg').textContent = randFrom(MSGS[safeStars]);
+
+    // Score detail line
+    const DETAILS = {
+      3: `${pct}% — Excellent!`,
+      2: `${pct}% — Good job!`,
+      1: `${pct}% — Keep going!`
+    };
+    document.getElementById('score-detail').textContent = DETAILS[safeStars];
+
+    // Mascot
+    const MASCOTS = { 3: '🥳', 2: '😊', 1: '🤔' };
+    document.getElementById('result-mascot').textContent = MASCOTS[safeStars];
+
+    // Time taken (test mode)
+    if (mode === 'test' && time) {
+      const el = document.getElementById('time-taken');
+      el.textContent = `⏱ ${formatTime(time)}`;
+      el.classList.remove('hidden');
+    }
+
+    // Per-operation breakdown (read from latest history entry)
+    if (mode === 'test') {
+      const latest = Storage.getTestHistory()[0];
+      if (latest && latest.opBreakdown) {
+        const rows = document.getElementById('op-breakdown-rows');
+        rows.innerHTML = ['add','sub','mul','div']
+          .filter(op => latest.opBreakdown[op])
+          .map(op => {
+            const { correct, total: t } = latest.opBreakdown[op];
+            const pct = Math.round(correct / t * 100);
+            return `
+              <div class="op-result-row">
+                <span class="op-pill ${op}">${OP_SYMBOLS[op]}</span>
+                <div class="op-mini-bar-wrap">
+                  <div class="op-mini-bar op-${op}-bar" style="width:${pct}%"></div>
+                </div>
+                <span class="op-result-score">${correct}/${t}</span>
+              </div>`;
+          }).join('');
+        document.getElementById('op-breakdown').classList.remove('hidden');
+      }
+      document.getElementById('btn-history').classList.remove('hidden');
+    }
+
+    // New best badge
+    if (best === 1) document.getElementById('best-badge').classList.remove('hidden');
+
+    // Animate stars in sequence
+    for (let i = 1; i <= 3; i++) {
+      if (i <= safeStars) {
+        setTimeout(() => document.getElementById(`star-${i}`).classList.add('earned'), i * 350);
+      }
+    }
+
+    // Sounds + confetti
+    if (safeStars === 3) {
+      setTimeout(() => {
+        playSound('complete');
+        launchConfetti(document.getElementById('confetti-canvas'));
+      }, 900);
+    } else {
+      setTimeout(() => playSound(safeStars >= 2 ? 'correct' : 'wrong'), 400);
+    }
+
+    // Show review button if this was a test and there are wrong answers saved
+    if (mode === 'test') {
+      const wrongQs = Storage.getWrongQuestions();
+      if (wrongQs.length > 0) {
+        document.getElementById('btn-review').classList.remove('hidden');
+      }
+    }
+
+    // Navigation
+    document.getElementById('btn-home').addEventListener('click', () => {
+      Storage.clearWrongQuestions();
+      window.location.href = 'index.html';
+    });
+
+    document.getElementById('btn-try').addEventListener('click', () => {
+      Storage.clearWrongQuestions();
+      if (mode === 'practice' && op) {
+        window.location.href = buildURL('practice.html', { year, op });
+      } else {
+        window.location.href = buildURL('test.html', { year });
+      }
+    });
+
+    document.getElementById('btn-review').addEventListener('click', () => {
+      window.location.href = buildURL('practice.html', { year, mode: 'review' });
+    });
+
+    document.getElementById('btn-history').addEventListener('click', () => {
+      window.location.href = 'history.html';
+    });
+  </script>
+
+</body>
+</html>
