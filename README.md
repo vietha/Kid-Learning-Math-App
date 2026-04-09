@@ -9,6 +9,10 @@ No installation. No sign-up. Just open and play.
 
 An engaging, touch-friendly maths app with cheerful visuals, year-based levels, and quick practice sessions for young learners.
 
+## Try It Online
+
+Live demo: [https://vietha.github.io/Kid-Learning-Math-App/index.html](https://vietha.github.io/Kid-Learning-Math-App/index.html)
+
 ---
 
 ## App Preview
