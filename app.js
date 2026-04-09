@@ -44,6 +44,17 @@ function randFrom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function weightedRandFrom(weightedItems) {
+  const totalWeight = weightedItems.reduce((sum, item) => sum + Math.max(0, item.weight || 0), 0);
+  if (totalWeight <= 0) return weightedItems[0]?.value ?? null;
+  let pick = Math.random() * totalWeight;
+  for (const item of weightedItems) {
+    pick -= Math.max(0, item.weight || 0);
+    if (pick <= 0) return item.value;
+  }
+  return weightedItems[weightedItems.length - 1]?.value ?? null;
+}
+
 // ============================================================
 // DIFFICULTY HELPERS
 // ============================================================
@@ -333,9 +344,20 @@ class MathSession {
 
   _build() {
     const ops = this.op === 'mixed' ? YEAR_CONFIG[this.year].ops : [this.op];
+    const pickOp = () => {
+      if (this.op !== 'mixed') return this.op;
+      if (this.year === 3) {
+        return weightedRandFrom([
+          { value: 'add', weight: 4 },
+          { value: 'sub', weight: 4 },
+          { value: 'mul', weight: 2 }
+        ]);
+      }
+      return randFrom(ops);
+    };
     let attempts = 0;
     while (this.questions.length < this.count && attempts < 300) {
-      const op = randFrom(ops);
+      const op = pickOp();
       const q  = generateQuestion(this.year, op, this.difficulty);
       if (!this._usedKeys.has(q.key)) {
         this._usedKeys.add(q.key);
@@ -345,7 +367,7 @@ class MathSession {
     }
     // Fall back to allow repeats if we can't fill all unique slots (very rare)
     while (this.questions.length < this.count) {
-      const op = randFrom(ops);
+      const op = pickOp();
       this.questions.push(generateQuestion(this.year, op, this.difficulty));
     }
   }
