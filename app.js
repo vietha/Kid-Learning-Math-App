@@ -280,12 +280,20 @@ class CountdownTimer {
 // ============================================================
 
 const AVATAR_COLORS = ['#FF6B35','#26de81','#45AAF2','#a55eea','#FF9F43','#FC5C65','#10AC84','#0652DD'];
+const AVATAR_ICONS = ['🦊', '🐶', '🐱', '🦄', '🐼', '🐸', '🐯', '🐨', '🐵', '🐰', '🦁', '🐻'];
 
 const Accounts = {
   _key: 'mathapp_accounts',
 
   getAll() {
-    try { const v = localStorage.getItem(this._key); return v ? JSON.parse(v) : []; }
+    try {
+      const v = localStorage.getItem(this._key);
+      return v ? JSON.parse(v).map((acct, i) => ({
+        ...acct,
+        color: acct.color || AVATAR_COLORS[i % AVATAR_COLORS.length],
+        avatar: acct.avatar || AVATAR_ICONS[i % AVATAR_ICONS.length]
+      })) : [];
+    }
     catch { return []; }
   },
 
@@ -299,13 +307,23 @@ const Accounts = {
   // Returns true if name already exists
   exists(name) { return !!this.find(name); },
 
-  create(name, age) {
+  create(name, age, avatar = null) {
     const list  = this.getAll();
     const color = AVATAR_COLORS[list.length % AVATAR_COLORS.length];
-    const acct  = { name: name.trim(), age: Number(age), color, createdAt: new Date().toISOString() };
+    const icon  = avatar || AVATAR_ICONS[list.length % AVATAR_ICONS.length];
+    const acct  = { name: name.trim(), age: Number(age), color, avatar: icon, createdAt: new Date().toISOString() };
     list.push(acct);
     this._save(list);
     return acct;
+  },
+
+  update(name, updates) {
+    const list = this.getAll();
+    const idx = list.findIndex(a => a.name.toLowerCase() === (name || '').toLowerCase());
+    if (idx === -1) return null;
+    list[idx] = { ...list[idx], ...updates };
+    this._save(list);
+    return list[idx];
   },
 
   remove(name) {
@@ -318,6 +336,7 @@ const Accounts = {
   login(name)   { localStorage.setItem('mathapp_session', name); },
   logout()      { localStorage.removeItem('mathapp_session'); },
   currentUser() { return localStorage.getItem('mathapp_session') || null; },
+  currentAccount() { return this.find(this.currentUser()); },
   isLoggedIn()  { return !!this.currentUser(); }
 };
 

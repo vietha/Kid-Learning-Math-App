@@ -88,6 +88,15 @@
       <div id="name-error" class="age-error hidden" style="margin-top:8px"></div>
     </div>
 
+    <div class="card" style="width:100%">
+      <div class="setting-label" style="margin-bottom:10px">Choose your icon</div>
+      <div class="avatar-picker-header">
+        <div id="new-avatar-preview" class="login-avatar-circle avatar-preview-circle">🦊</div>
+        <div class="avatar-picker-copy">Pick an animal or magical buddy for your profile.</div>
+      </div>
+      <div id="new-avatar-grid" class="avatar-grid"></div>
+    </div>
+
     <!-- Age (using numpad) -->
     <div class="card" style="width:100%;text-align:center">
       <div class="setting-label" style="margin-bottom:10px">Age for login</div>
@@ -113,6 +122,22 @@
 
   </div>
 
+  <div id="sec-edit-avatar" class="screen hidden" style="padding-top:20px">
+    <button class="back-btn" id="back-from-edit-avatar">← Back</button>
+
+    <div class="mascot" style="font-size:56px;animation:none">🎨</div>
+    <div class="section-label">Change kid icon</div>
+
+    <div class="card" style="width:100%;text-align:center">
+      <div id="edit-avatar-preview" class="login-avatar-circle avatar-preview-circle" style="margin-inline:auto">🦊</div>
+      <div id="edit-avatar-name" class="login-greeting" style="font-size:1.2rem;margin-top:12px">Kid</div>
+      <div class="current-kid-subtitle">Choose a new icon for this kid.</div>
+      <div id="edit-avatar-grid" class="avatar-grid" style="margin-top:18px"></div>
+    </div>
+
+    <button id="btn-save-avatar" class="settings-save-btn">Save Icon</button>
+  </div>
+
   <script src="app.js"></script>
   <script>
     // If already logged in, skip straight to home
@@ -120,10 +145,22 @@
 
     // ── Section navigation ─────────────────────────────────────
     function show(id) {
-      ['sec-pick', 'sec-age', 'sec-create'].forEach(s =>
+      ['sec-pick', 'sec-age', 'sec-create', 'sec-edit-avatar'].forEach(s =>
         document.getElementById(s).classList.toggle('hidden', s !== id)
       );
       window.scrollTo(0, 0);
+    }
+
+    function renderAvatarOptions(containerId, selectedAvatar, onPick) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = AVATAR_ICONS.map(icon => `
+        <button class="avatar-option ${icon === selectedAvatar ? 'selected' : ''}" data-avatar="${icon}">
+          ${icon}
+        </button>
+      `).join('');
+      container.querySelectorAll('.avatar-option').forEach(btn => {
+        btn.addEventListener('click', () => onPick(btn.dataset.avatar));
+      });
     }
 
     // ── Render account list ────────────────────────────────────
@@ -140,8 +177,9 @@
 
       grid.innerHTML = accounts.map(a => `
         <div class="account-card" data-name="${a.name}">
-          <div class="avatar-circle" style="background:${a.color}">${a.name[0].toUpperCase()}</div>
+          <div class="avatar-circle" style="background:${a.color}">${a.avatar || a.name[0].toUpperCase()}</div>
           <div class="account-name">${a.name}</div>
+          <button class="edit-account-btn" data-name="${a.name}" title="Change icon">✏️</button>
           <button class="delete-account-btn" data-name="${a.name}" title="Remove account">×</button>
         </div>
       `).join('');
@@ -149,8 +187,15 @@
       // Click card → age entry
       grid.querySelectorAll('.account-card').forEach(card => {
         card.addEventListener('click', e => {
-          if (e.target.classList.contains('delete-account-btn')) return;
+          if (e.target.classList.contains('delete-account-btn') || e.target.classList.contains('edit-account-btn')) return;
           startLogin(card.dataset.name);
+        });
+      });
+
+      grid.querySelectorAll('.edit-account-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          startEditAvatar(btn.dataset.name);
         });
       });
 
@@ -170,18 +215,38 @@
     // ── Login flow ─────────────────────────────────────────────
     let loginTarget = null;
     let ageInput    = '';
+    let editTarget  = null;
+    let draftAvatar = AVATAR_ICONS[0];
 
     function startLogin(name) {
       loginTarget = name;
       ageInput    = '';
       const acct  = Accounts.find(name);
 
-      document.getElementById('login-avatar').textContent    = name[0].toUpperCase();
+      document.getElementById('login-avatar').textContent    = acct?.avatar || name[0].toUpperCase();
       document.getElementById('login-avatar').style.background = acct ? acct.color : 'var(--primary)';
       document.getElementById('login-greeting').textContent  = `Hi, ${name}! 👋`;
       refreshAgeDisplay();
       document.getElementById('age-error').classList.add('hidden');
       show('sec-age');
+    }
+
+    function startEditAvatar(name) {
+      editTarget = name;
+      const acct = Accounts.find(name);
+      if (!acct) return;
+      draftAvatar = acct.avatar || AVATAR_ICONS[0];
+      const preview = document.getElementById('edit-avatar-preview');
+      preview.textContent = draftAvatar;
+      preview.style.background = acct.color;
+      document.getElementById('edit-avatar-name').textContent = name;
+      const updateEditAvatar = avatar => {
+        draftAvatar = avatar;
+        preview.textContent = avatar;
+        renderAvatarOptions('edit-avatar-grid', draftAvatar, updateEditAvatar);
+      };
+      renderAvatarOptions('edit-avatar-grid', draftAvatar, updateEditAvatar);
+      show('sec-edit-avatar');
     }
 
     function refreshAgeDisplay() {
@@ -225,6 +290,7 @@
 
     // ── Create account flow ────────────────────────────────────
     let newAge = '';
+    let newAvatar = AVATAR_ICONS[0];
 
     function refreshNewAgeDisplay() {
       const el = document.getElementById('new-age-display');
@@ -232,15 +298,29 @@
       el.classList.toggle('has-value', newAge.length > 0);
     }
 
+    function refreshNewAvatarPicker() {
+      document.getElementById('new-avatar-preview').textContent = newAvatar;
+      renderAvatarOptions('new-avatar-grid', newAvatar, avatar => {
+        newAvatar = avatar;
+        refreshNewAvatarPicker();
+      });
+    }
+
     document.getElementById('btn-add').addEventListener('click', () => {
       newAge = '';
+      newAvatar = AVATAR_ICONS[0];
       document.getElementById('new-name').value = '';
       document.getElementById('name-error').classList.add('hidden');
       refreshNewAgeDisplay();
+      refreshNewAvatarPicker();
       show('sec-create');
     });
 
     document.getElementById('back-to-pick2').addEventListener('click', () => show('sec-pick'));
+    document.getElementById('back-from-edit-avatar').addEventListener('click', () => {
+      editTarget = null;
+      show('sec-pick');
+    });
 
     document.querySelectorAll('.num-btn[data-for="create"]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -279,10 +359,18 @@
         return;
       }
 
-      Accounts.create(nameVal, Number(newAge));
+      Accounts.create(nameVal, Number(newAge), newAvatar);
       Accounts.login(nameVal);
       window.location.replace('index.html');
     }
+
+    document.getElementById('btn-save-avatar').addEventListener('click', () => {
+      if (!editTarget) return;
+      Accounts.update(editTarget, { avatar: draftAvatar });
+      editTarget = null;
+      renderAccounts();
+      show('sec-pick');
+    });
 
     // Allow pressing Enter in the name field to move to age
     document.getElementById('new-name').addEventListener('keydown', e => {
@@ -290,6 +378,7 @@
     });
 
     // ── Init ───────────────────────────────────────────────────
+    refreshNewAvatarPicker();
     renderAccounts();
   </script>
 

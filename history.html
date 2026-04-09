@@ -20,6 +20,7 @@
     <div class="card current-kid-card">
       <div class="section-label" style="margin-bottom:12px">Viewing stats for</div>
       <div class="current-kid-row">
+        <div id="current-kid-avatar" class="mini-avatar-circle">🦊</div>
         <div>
           <div id="current-kid-name" class="current-kid-name">Kid</div>
           <div class="current-kid-subtitle">Only this kid's history and analytics are shown here.</div>
@@ -100,6 +101,9 @@
   <script src="app.js"></script>
   <script>
     requireLogin();
+    const currentKid = Accounts.currentAccount();
+    document.getElementById('current-kid-avatar').textContent = currentKid?.avatar || '🦊';
+    document.getElementById('current-kid-avatar').style.background = currentKid?.color || 'var(--primary)';
     document.getElementById('current-kid-name').textContent = Storage.getPlayerName();
     document.getElementById('btn-switch-kid').addEventListener('click', () => {
       Accounts.logout();
