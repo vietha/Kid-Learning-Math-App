@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analysis — Math Champions</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="screen" style="padding-top:16px;gap:16px">
+
+    <div style="width:100%;display:flex;align-items:center;justify-content:space-between">
+      <button class="back-btn" onclick="window.location.href='index.html'">← Home</button>
+      <div class="app-title" style="font-size:1.3rem;-webkit-text-fill-color:unset;color:var(--text)">📊 Analysis</div>
+      <div style="width:60px"></div>
+    </div>
+
+    <div class="subnav-row">
+      <button class="subnav-btn" onclick="window.location.href='history.html'">🕘 History</button>
+      <button class="subnav-btn active">📊 Analysis</button>
+    </div>
+
+    <div class="card current-kid-card">
+      <div class="section-label" style="margin-bottom:12px">Viewing analysis for</div>
+      <div class="current-kid-row">
+        <div id="current-kid-avatar" class="mini-avatar-circle">🦊</div>
+        <div>
+          <div id="current-kid-name" class="current-kid-name">Kid</div>
+          <div class="current-kid-subtitle">Test analytics and activity patterns for this kid.</div>
+        </div>
+        <button id="btn-switch-kid" class="switch-kid-btn">Switch Kid</button>
+      </div>
+    </div>
+
+    <div id="empty-state" class="hidden" style="text-align:center;padding:40px 0;width:100%">
+      <div style="font-size:4rem">📈</div>
+      <div style="font-size:1.1rem;font-weight:800;color:var(--text);margin-top:12px">No analytics yet!</div>
+      <div style="font-size:0.9rem;font-weight:600;color:var(--text-light);margin-top:6px">
+        Complete a Mixed Test to unlock score and operation analysis.
+      </div>
+      <button class="settings-save-btn" style="margin-top:24px;max-width:280px"
+              onclick="window.location.href='index.html'">Start a Test</button>
+    </div>
+
+    <div id="content" style="width:100%;display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="setting-label" style="margin-bottom:14px">Activity frequency</div>
+        <div class="activity-chart-copy">Suggested view: a 14-day bar chart split into practice and test sessions so parents can quickly spot routine and consistency.</div>
+        <div id="activity-chart" class="activity-chart"></div>
+        <div class="activity-chart-legend">
+          <span class="legend-pill practice">Practice</span>
+          <span class="legend-pill test">Test</span>
+        </div>
+      </div>
+
+      <div id="analytics-sections" class="hidden" style="width:100%;display:flex;flex-direction:column;gap:16px">
+        <div class="stat-row">
+          <div class="stat-card">
+            <div id="stat-total" class="stat-value">0</div>
+            <div class="stat-label">Tests</div>
+          </div>
+          <div class="stat-card">
+            <div id="stat-avg" class="stat-value">—</div>
+            <div class="stat-label">Avg score</div>
+          </div>
+          <div class="stat-card">
+            <div id="stat-time" class="stat-value">—</div>
+            <div class="stat-label">Avg time</div>
+          </div>
+        </div>
+
+        <div class="card" id="op-accuracy-card">
+          <div class="setting-label" style="margin-bottom:14px">Operation accuracy (all time)</div>
+          <div id="op-accuracy-rows"></div>
+          <div id="op-no-data" class="hidden" style="color:var(--text-light);font-size:0.9rem;font-weight:600">
+            Not enough data yet — keep taking tests!
+          </div>
+        </div>
+
+        <div class="card" id="summary-card">
+          <div class="setting-label" style="margin-bottom:12px">Strengths & areas to improve</div>
+          <div id="summary-content"></div>
+        </div>
+
+        <div class="card">
+          <div class="setting-label" style="margin-bottom:12px">Recent test results</div>
+          <div id="trend-row" class="trend-row"></div>
+          <div class="trend-legend">
+            <span class="trend-dot trend-dot-green" style="width:12px;height:12px"></span> 80%+
+            <span class="trend-dot trend-dot-yellow" style="width:12px;height:12px;margin-left:8px"></span> 50–79%
+            <span class="trend-dot trend-dot-red" style="width:12px;height:12px;margin-left:8px"></span> &lt;50%
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    requireLogin();
+    const currentKid = Accounts.currentAccount();
+    document.getElementById('current-kid-avatar').textContent = currentKid?.avatar || '🦊';
+    document.getElementById('current-kid-avatar').style.background = currentKid?.color || 'var(--primary)';
+    document.getElementById('current-kid-name').textContent = Storage.getPlayerName();
+    document.getElementById('btn-switch-kid').addEventListener('click', () => {
+      Accounts.logout();
+      window.location.replace('login.html');
+    });
+
+    const testHistory = Storage.getTestHistory();
+    const activityHistory = Storage.getActivityHistory();
+    const analytics = computeHistoryAnalytics(testHistory);
+
+    renderActivityChart();
+
+    if (!testHistory.length) {
+      document.getElementById('empty-state').classList.remove('hidden');
+    } else {
+      document.getElementById('analytics-sections').classList.remove('hidden');
+      renderStats();
+      renderOpAccuracy();
+      renderSummary();
+      renderTrend();
+    }
+
+    function renderActivityChart() {
+      const chart = document.getElementById('activity-chart');
+      const points = buildActivityChartData(activityHistory, 14);
+      const maxCount = Math.max(1, ...points.map(p => p.practice + p.test));
+      chart.innerHTML = points.map(point => {
+        const practiceHeight = Math.max(point.practice ? 12 : 0, Math.round((point.practice / maxCount) * 120));
+        const testHeight = Math.max(point.test ? 12 : 0, Math.round((point.test / maxCount) * 120));
+        return `
+          <div class="activity-day" title="${point.label}: ${point.practice} practice, ${point.test} tests">
+            <div class="activity-bars">
+              <span class="activity-bar practice" style="height:${practiceHeight}px"></span>
+              <span class="activity-bar test" style="height:${testHeight}px"></span>
+            </div>
+            <span class="activity-day-label">${point.label.replace(' ', '<br>')}</span>
+          </div>`;
+      }).join('');
+    }
+
+    function renderStats() {
+      document.getElementById('stat-total').textContent = analytics.totalTests;
+      document.getElementById('stat-avg').textContent   = analytics.avgPct + '%';
+      document.getElementById('stat-time').textContent  = analytics.avgTime ? formatTime(analytics.avgTime) : '—';
+    }
+
+    function renderOpAccuracy() {
+      const rows = document.getElementById('op-accuracy-rows');
+      const ops  = ['add', 'sub', 'mul', 'div'];
+      const available = ops.filter(op => analytics.opAccuracy[op]);
+
+      if (!available.length) {
+        document.getElementById('op-no-data').classList.remove('hidden');
+        return;
+      }
+
+      rows.innerHTML = available.map(op => {
+        const { pct } = analytics.opAccuracy[op];
+        return `
+          <div class="accuracy-row">
+            <span class="op-label-badge op-bg-${op}">${OP_SYMBOLS[op]} ${OP_NAMES[op]}</span>
+            <div class="accuracy-bar-wrap">
+              <div class="accuracy-bar" style="width:${pct}%;background:var(--${op})"></div>
+            </div>
+            <span class="accuracy-pct">${pct}%</span>
+          </div>`;
+      }).join('');
+    }
+
+    function renderSummary() {
+      const { strongest, weakest } = analytics;
+      const el = document.getElementById('summary-content');
+
+      if (!strongest) {
+        el.innerHTML = `<div style="color:var(--text-light);font-size:0.9rem;font-weight:600">
+          Keep taking tests to unlock your personalised summary!
+        </div>`;
+        return;
+      }
+
+      let html = '';
+      if (strongest) {
+        html += `<div class="summary-item good">
+          ⭐ <strong>Strong at:</strong> ${OP_SYMBOLS[strongest[0]]} ${OP_NAMES[strongest[0]]}
+          — ${strongest[1].pct}% (${strongest[1].correct}/${strongest[1].total})
+        </div>`;
+      }
+      if (weakest && weakest[0] !== strongest[0]) {
+        html += `<div class="summary-item needs-work">
+          💪 <strong>Needs practice:</strong> ${OP_SYMBOLS[weakest[0]]} ${OP_NAMES[weakest[0]]}
+          — ${weakest[1].pct}% (${weakest[1].correct}/${weakest[1].total})
+        </div>`;
+      }
+      el.innerHTML = html;
+    }
+
+    function renderTrend() {
+      const recent = testHistory.slice(0, 10);
+      const container = document.getElementById('trend-row');
+      container.innerHTML = recent.map(t => {
+        const cls = t.pct >= 80 ? 'trend-dot-green' : t.pct >= 50 ? 'trend-dot-yellow' : 'trend-dot-red';
+        return `<div class="trend-dot ${cls}" title="${t.pct}%  —  ${formatDate(t.date)}">
+          <span>${t.pct}%</span>
+        </div>`;
+      }).join('');
+    }
+  </script>
+
+  <footer class="app-footer">2026 <a class="app-footer-link" href="https://designveloper.com" target="_blank" rel="noreferrer">Designveloper.com</a></footer>
+
+</body>
+</html>

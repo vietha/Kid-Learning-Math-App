@@ -155,7 +155,8 @@ function buildTalentExpressionQuestion(year, op) {
       const b = randInt(1, Math.max(2, Math.floor(max * 0.4)));
       const canUsePlusPlus = a + b + 1 <= max;
       const canUsePlusMinus = a + b - 1 >= 0;
-      const usePlusMinus = canUsePlusMinus && (!canUsePlusPlus || Math.random() < 0.5);
+      const allowMinus = year >= 2;
+      const usePlusMinus = allowMinus && canUsePlusMinus && (!canUsePlusPlus || Math.random() < 0.5);
 
       if (usePlusMinus) {
         const c = randInt(1, a + b - 1);
@@ -547,7 +548,18 @@ const Storage = {
     try { const v = localStorage.getItem(this._k('history')); return v ? JSON.parse(v) : []; }
     catch { return []; }
   },
-  clearTestHistory() { localStorage.removeItem(this._k('history')); }
+  clearTestHistory() { localStorage.removeItem(this._k('history')); },
+  saveActivity(entry) {
+    const h = this.getActivityHistory();
+    h.unshift(entry);
+    if (h.length > 400) h.length = 400;
+    try { localStorage.setItem(this._k('activity_history'), JSON.stringify(h)); } catch (_) {}
+  },
+  getActivityHistory() {
+    try { const v = localStorage.getItem(this._k('activity_history')); return v ? JSON.parse(v) : []; }
+    catch { return []; }
+  },
+  clearActivityHistory() { localStorage.removeItem(this._k('activity_history')); }
 };
 
 // ============================================================
@@ -678,6 +690,40 @@ function computeHistoryAnalytics(history) {
     strongest:  ranked[0]                    || null,  // [op, {pct,correct,total}]
     weakest:    ranked[ranked.length - 1]    || null
   };
+}
+
+function filterActivityByDays(activity, days) {
+  if (!days) return activity;
+  const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+  return activity.filter(item => {
+    const time = Date.parse(item.date || '');
+    return Number.isFinite(time) && time >= cutoff;
+  });
+}
+
+function buildActivityChartData(activity, days = 14) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const buckets = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    buckets.push({
+      key: d.toISOString().slice(0, 10),
+      label: d.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' }),
+      practice: 0,
+      test: 0
+    });
+  }
+  const byKey = Object.fromEntries(buckets.map(b => [b.key, b]));
+  for (const item of activity) {
+    const key = (item.date || '').slice(0, 10);
+    const bucket = byKey[key];
+    if (!bucket) continue;
+    if (item.kind === 'test') bucket.test++;
+    else bucket.practice++;
+  }
+  return buckets;
 }
 
 function formatTime(seconds) {

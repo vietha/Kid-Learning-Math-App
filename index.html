@@ -15,7 +15,8 @@
 
     <!-- History + Settings buttons -->
     <div style="width:100%;display:flex;justify-content:flex-end;gap:8px">
-      <button id="btn-history" class="settings-btn" title="History & Stats">📊</button>
+      <button id="btn-history" class="settings-btn" title="History">🕘</button>
+      <button id="btn-analytics" class="settings-btn" title="Analysis">📊</button>
       <button id="btn-settings" class="settings-btn" title="Settings">⚙️</button>
     </div>
 
@@ -282,6 +283,7 @@
 
     document.getElementById('btn-settings').addEventListener('click', openSettings);
     document.getElementById('btn-history').addEventListener('click', () => { window.location.href = 'history.html'; });
+    document.getElementById('btn-analytics').addEventListener('click', () => { window.location.href = 'analytics.html'; });
 
     document.querySelectorAll('.num-btn[data-age-val]').forEach(btn => {
       btn.addEventListener('click', () => {

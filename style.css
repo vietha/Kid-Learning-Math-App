@@ -94,6 +94,31 @@ body {
   border-bottom-color: var(--primary-dark);
 }
 
+.subnav-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.subnav-btn {
+  border: 2px solid #e6e6e6;
+  background: white;
+  color: var(--text-light);
+  border-radius: 18px;
+  padding: 12px 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.subnav-btn.active {
+  border-color: var(--mul);
+  background: rgba(69,170,242,0.08);
+  color: var(--mul);
+}
+
 /* ============================================================
    HOME SCREEN
    ============================================================ */
@@ -828,6 +853,13 @@ body {
 .result-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
 .result-btn:active { transform: translateY(0); }
 
+.result-link-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 /* ============================================================
    RESULTS PAGE — TIME & OP BREAKDOWN
    ============================================================ */
@@ -978,6 +1010,98 @@ body {
 
 .history-time { font-size: 0.8rem; font-weight: 700; color: var(--text-light); white-space: nowrap; }
 
+.history-pct {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text-light);
+}
+
+.session-badge {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text);
+  background: #f6f6f6;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.mixed-badge {
+  background: linear-gradient(90deg, var(--add), var(--mul));
+}
+
+.history-filter-group .chip {
+  min-width: 96px;
+}
+
+.activity-chart-copy {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.45;
+  margin-bottom: 16px;
+}
+
+.activity-chart {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+  min-height: 170px;
+}
+
+.activity-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.activity-bars {
+  height: 128px;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 4px;
+}
+
+.activity-bar {
+  width: 10px;
+  border-radius: 999px 999px 4px 4px;
+  min-height: 0;
+}
+
+.activity-bar.practice { background: var(--primary); }
+.activity-bar.test     { background: var(--mul); }
+
+.activity-day-label {
+  font-size: 0.64rem;
+  font-weight: 800;
+  color: var(--text-light);
+  text-align: center;
+  line-height: 1.1;
+}
+
+.activity-chart-legend {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: white;
+}
+
+.legend-pill.practice { background: var(--primary); }
+.legend-pill.test     { background: var(--mul); }
+
 /* Clear button */
 .clear-btn {
   background: none;
@@ -1010,7 +1134,8 @@ body {
   }
 
   .mode-btns,
-  .result-btns {
+  .result-btns,
+  .result-link-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1061,6 +1186,10 @@ body {
 
   .stat-row {
     grid-template-columns: 1fr;
+  }
+
+  .activity-chart {
+    gap: 6px;
   }
 
   .history-item-top,
@@ -1160,6 +1289,14 @@ body {
 
   .avatar-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .activity-chart {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .activity-day:nth-child(n+8) {
+    display: none;
   }
 }
 

@@ -211,6 +211,19 @@
 
     // --- Navigate to results ---
     function goToResults() {
+      const pct = session.count > 0 ? Math.round((session.score / session.count) * 100) : 0;
+      Storage.saveActivity({
+        id: Date.now(),
+        date: new Date().toISOString(),
+        kind: isReview ? 'review' : 'practice',
+        year,
+        op: isReview ? 'mixed' : op,
+        label: isReview ? 'Review Practice' : OP_NAMES[op],
+        score: session.score,
+        total: session.count,
+        pct
+      });
+
       if (isReview) {
         window.location.href = buildURL('results.html', {
           year,

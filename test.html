@@ -215,6 +215,20 @@
         opBreakdown
       });
 
+      Storage.saveActivity({
+        id: resultId,
+        date: new Date().toISOString(),
+        kind: 'test',
+        year,
+        op: 'mixed',
+        label: 'Mixed Test',
+        difficulty,
+        score: session.score,
+        total: COUNT,
+        pct: session.percentage,
+        timeTaken
+      });
+
       const isNewBest = Storage.setBestScore(year, 'test', session.score, COUNT);
       window.location.href = buildURL('results.html', {
         year,

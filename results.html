@@ -49,10 +49,14 @@
       📖 Practice Wrong Answers
     </button>
 
-    <!-- Link to history page (test mode only) -->
-    <button class="result-btn history-link hidden" id="btn-history">
-      📊 View History & Stats
-    </button>
+    <div class="result-link-grid">
+      <button class="result-btn history-link" id="btn-history">
+        🕘 View History
+      </button>
+      <button class="result-btn history-link" id="btn-analytics">
+        📊 View Analysis
+      </button>
+    </div>
 
   </div>
 
@@ -119,7 +123,6 @@
           }).join('');
         document.getElementById('op-breakdown').classList.remove('hidden');
       }
-      document.getElementById('btn-history').classList.remove('hidden');
     }
 
     // New best badge
@@ -171,6 +174,10 @@
 
     document.getElementById('btn-history').addEventListener('click', () => {
       window.location.href = 'history.html';
+    });
+
+    document.getElementById('btn-analytics').addEventListener('click', () => {
+      window.location.href = 'analytics.html';
     });
   </script>
 
