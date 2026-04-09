@@ -21,18 +21,6 @@
       <button class="subnav-btn active">📊 Analysis</button>
     </div>
 
-    <div class="card current-kid-card">
-      <div class="section-label" style="margin-bottom:12px">Viewing analysis for</div>
-      <div class="current-kid-row">
-        <div id="current-kid-avatar" class="mini-avatar-circle">🦊</div>
-        <div>
-          <div id="current-kid-name" class="current-kid-name">Kid</div>
-          <div class="current-kid-subtitle">Test analytics and activity patterns for this kid.</div>
-        </div>
-        <button id="btn-switch-kid" class="switch-kid-btn">Switch Kid</button>
-      </div>
-    </div>
-
     <div id="empty-state" class="hidden" style="text-align:center;padding:40px 0;width:100%">
       <div style="font-size:4rem">📈</div>
       <div style="font-size:1.1rem;font-weight:800;color:var(--text);margin-top:12px">No analytics yet!</div>
@@ -90,14 +78,6 @@
   <script src="app.js"></script>
   <script>
     requireLogin();
-    const currentKid = Accounts.currentAccount();
-    document.getElementById('current-kid-avatar').textContent = currentKid?.avatar || '🦊';
-    document.getElementById('current-kid-avatar').style.background = currentKid?.color || 'var(--primary)';
-    document.getElementById('current-kid-name').textContent = Storage.getPlayerName();
-    document.getElementById('btn-switch-kid').addEventListener('click', () => {
-      Accounts.logout();
-      window.location.replace('login.html');
-    });
 
     const testHistory = Storage.getTestHistory();
     const analytics = computeHistoryAnalytics(testHistory);

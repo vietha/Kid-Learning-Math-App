@@ -314,6 +314,15 @@ body {
 }
 .settings-btn:hover { transform: rotate(45deg); }
 
+.player-menu-btn {
+  color: white;
+  font-size: 1.45rem;
+}
+
+.player-menu-btn:hover {
+  transform: translateY(-2px);
+}
+
 .setting-label {
   font-size: 0.85rem;
   font-weight: 800;
@@ -358,7 +367,6 @@ body {
 .settings-save-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
 .settings-save-btn:active { transform: translateY(0); }
 
-/* Current kid card */
 .current-kid-row {
   display: flex;
   align-items: center;

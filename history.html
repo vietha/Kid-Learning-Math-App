@@ -21,18 +21,6 @@
       <button class="subnav-btn" onclick="window.location.href='analytics.html'">📊 Analysis</button>
     </div>
 
-    <div class="card current-kid-card">
-      <div class="section-label" style="margin-bottom:12px">Viewing history for</div>
-      <div class="current-kid-row">
-        <div id="current-kid-avatar" class="mini-avatar-circle">🦊</div>
-        <div>
-          <div id="current-kid-name" class="current-kid-name">Kid</div>
-          <div class="current-kid-subtitle">Practice, review, and test sessions for this kid.</div>
-        </div>
-        <button id="btn-switch-kid" class="switch-kid-btn">Switch Kid</button>
-      </div>
-    </div>
-
     <div class="card">
       <div class="setting-label" style="margin-bottom:12px">Filter history</div>
       <div class="chip-group history-filter-group">
@@ -92,14 +80,6 @@
   <script src="app.js"></script>
   <script>
     requireLogin();
-    const currentKid = Accounts.currentAccount();
-    document.getElementById('current-kid-avatar').textContent = currentKid?.avatar || '🦊';
-    document.getElementById('current-kid-avatar').style.background = currentKid?.color || 'var(--primary)';
-    document.getElementById('current-kid-name').textContent = Storage.getPlayerName();
-    document.getElementById('btn-switch-kid').addEventListener('click', () => {
-      Accounts.logout();
-      window.location.replace('login.html');
-    });
 
     const activity = Storage.getActivityHistory();
     let activeRange = 7;

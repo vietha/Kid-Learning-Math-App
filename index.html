@@ -13,11 +13,12 @@
        ===================================================== -->
   <div id="sec-welcome" class="screen" style="padding-top:16px">
 
-    <!-- History + Settings buttons -->
+    <!-- Top actions -->
     <div style="width:100%;display:flex;justify-content:flex-end;gap:8px">
       <button id="btn-history" class="settings-btn" title="History">🕘</button>
       <button id="btn-analytics" class="settings-btn" title="Analysis">📊</button>
       <button id="btn-settings" class="settings-btn" title="Settings">⚙️</button>
+      <button id="btn-player" class="settings-btn player-menu-btn" title="Who's Playing">👤</button>
     </div>
 
     <div class="mascot">🦉</div>
@@ -25,22 +26,6 @@
     <div>
       <div class="app-title">Math Champions</div>
       <div class="app-subtitle">NZ Primary School Maths Practice</div>
-    </div>
-
-    <div class="card current-kid-card">
-      <div class="section-label" style="margin-bottom:12px">Who's playing?</div>
-      <div class="current-kid-row">
-        <div id="current-kid-avatar" class="mini-avatar-circle">🦊</div>
-        <div>
-          <div id="current-kid-name" class="current-kid-name">Kid</div>
-          <div id="current-kid-age" class="current-kid-age">Age 8</div>
-          <div class="current-kid-subtitle">History, scores, and settings stay saved for this kid.</div>
-        </div>
-        <div class="current-kid-actions">
-          <button id="btn-edit-age" class="switch-kid-btn">Edit Age</button>
-          <button id="btn-switch-kid" class="switch-kid-btn">Switch Kid</button>
-        </div>
-      </div>
     </div>
 
     <div class="card">
@@ -159,6 +144,29 @@
 
   </div>
 
+  <div id="sec-player" class="screen hidden">
+
+    <button class="back-btn" id="back-from-player">← Back</button>
+
+    <div id="player-card-avatar" class="login-avatar-circle" style="animation:none">🦊</div>
+    <div class="section-label">Who's Playing</div>
+
+    <div class="card" style="width:100%">
+      <div class="current-kid-row">
+        <div>
+          <div id="player-card-name" class="current-kid-name">Kid</div>
+          <div id="player-card-age" class="current-kid-age">Age 8</div>
+          <div class="current-kid-subtitle">History, scores, and settings stay saved for this kid.</div>
+        </div>
+        <div class="current-kid-actions">
+          <button id="btn-edit-age" class="switch-kid-btn">Edit Age</button>
+          <button id="btn-switch-kid" class="switch-kid-btn">Switch Kid</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <div id="sec-edit-age" class="screen hidden">
 
     <button class="back-btn" id="back-from-edit-age">← Back</button>
@@ -202,10 +210,14 @@
 
     function refreshCurrentKidCard() {
       currentKid = Accounts.currentAccount();
-      document.getElementById('current-kid-avatar').textContent = currentKid?.avatar || '🦊';
-      document.getElementById('current-kid-avatar').style.background = currentKid?.color || 'var(--primary)';
-      document.getElementById('current-kid-name').textContent = Storage.getPlayerName();
-      document.getElementById('current-kid-age').textContent = `Age ${currentKid?.age ?? '—'}`;
+      const avatar = currentKid?.avatar || '🦊';
+      const color = currentKid?.color || 'var(--primary)';
+      document.getElementById('btn-player').textContent = avatar;
+      document.getElementById('btn-player').style.background = color;
+      document.getElementById('player-card-avatar').textContent = avatar;
+      document.getElementById('player-card-avatar').style.background = color;
+      document.getElementById('player-card-name').textContent = Storage.getPlayerName();
+      document.getElementById('player-card-age').textContent = `Age ${currentKid?.age ?? '—'}`;
     }
 
     function refreshAgeEditor() {
@@ -230,7 +242,7 @@
 
     // --- Section navigation ---
     function show(id) {
-      ['sec-welcome', 'sec-level', 'sec-ops', 'sec-settings', 'sec-edit-age'].forEach(s =>
+      ['sec-welcome', 'sec-level', 'sec-ops', 'sec-settings', 'sec-player', 'sec-edit-age'].forEach(s =>
         document.getElementById(s).classList.toggle('hidden', s !== id)
       );
       window.scrollTo(0, 0);
@@ -279,9 +291,11 @@
 
     // Cancel → discard draft, go home
     document.getElementById('back-from-settings').addEventListener('click', () => show('sec-welcome'));
+    document.getElementById('back-from-player').addEventListener('click', () => show('sec-welcome'));
     document.getElementById('back-from-edit-age').addEventListener('click', () => show('sec-welcome'));
 
     document.getElementById('btn-settings').addEventListener('click', openSettings);
+    document.getElementById('btn-player').addEventListener('click', () => show('sec-player'));
     document.getElementById('btn-history').addEventListener('click', () => { window.location.href = 'history.html'; });
     document.getElementById('btn-analytics').addEventListener('click', () => { window.location.href = 'analytics.html'; });
 
@@ -307,7 +321,7 @@
       }
       Accounts.update(currentKid.name, { age: ageNum });
       refreshCurrentKidCard();
-      show('sec-welcome');
+      show('sec-player');
     });
 
     // --- Year selection ---
