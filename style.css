@@ -276,22 +276,34 @@ body {
 
 /* Back button */
 .back-btn {
-  background: none;
-  border: none;
+  background: rgba(255,255,255,0.82);
+  border: 1.5px solid rgba(224,224,224,0.95);
   font-family: 'Nunito', sans-serif;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-light);
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 4px;
-  border-radius: var(--radius-sm);
-  transition: color 0.15s;
+  gap: 8px;
+  padding: 10px 14px;
+  min-height: 44px;
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background 0.15s;
   align-self: flex-start;
+  backdrop-filter: blur(6px);
 }
-.back-btn:hover { color: var(--text); }
+.back-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,107,53,0.35);
+  background: rgba(255,255,255,0.96);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
+.back-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
 
 /* ============================================================
    SETTINGS SCREEN
