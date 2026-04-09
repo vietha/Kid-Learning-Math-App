@@ -323,6 +323,20 @@ body {
   transform: translateY(-2px);
 }
 
+.avatar-edit-trigger {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-self: center;
+}
+
+.avatar-edit-trigger:hover .login-avatar-circle {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(0,0,0,0.16);
+}
+
 .setting-label {
   font-size: 0.85rem;
   font-weight: 800;

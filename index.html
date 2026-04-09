@@ -148,7 +148,10 @@
 
     <button class="back-btn" id="back-from-player">← Back</button>
 
-    <div id="player-card-avatar" class="login-avatar-circle" style="animation:none">🦊</div>
+    <button id="player-card-avatar-btn" class="avatar-edit-trigger" title="Change icon">
+      <div id="player-card-avatar" class="login-avatar-circle" style="animation:none">🦊</div>
+    </button>
+    <div class="current-kid-subtitle" style="margin-top:-6px">Tap the avatar to change icon</div>
     <div class="section-label">Who's Playing</div>
 
     <div class="card" style="width:100%">
@@ -165,6 +168,23 @@
       </div>
     </div>
 
+  </div>
+
+  <div id="sec-edit-avatar" class="screen hidden">
+
+    <button class="back-btn" id="back-from-edit-avatar">← Back</button>
+
+    <div class="mascot" style="font-size:56px;animation:none">🎨</div>
+    <div class="section-label">Change Icon</div>
+
+    <div class="card" style="width:100%;text-align:center">
+      <div id="edit-avatar-preview" class="login-avatar-circle avatar-preview-circle" style="margin-inline:auto">🦊</div>
+      <div id="edit-avatar-name" class="login-greeting" style="font-size:1.2rem;margin-top:12px">Kid</div>
+      <div class="current-kid-subtitle">Choose a new icon for this kid.</div>
+      <div id="edit-avatar-grid" class="avatar-grid" style="margin-top:18px"></div>
+    </div>
+
+    <button id="btn-save-avatar" class="settings-save-btn">Save Icon</button>
   </div>
 
   <div id="sec-edit-age" class="screen hidden">
@@ -207,17 +227,43 @@
     let selectedYear = null;
     let currentKid = Accounts.currentAccount();
     let ageDraft = '';
+    let avatarDraft = currentKid?.avatar || AVATAR_ICONS[0];
+
+    function renderAvatarOptions(containerId, selectedAvatar, onPick) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = AVATAR_ICONS.map(icon => `
+        <button class="avatar-option ${icon === selectedAvatar ? 'selected' : ''}" data-avatar="${icon}">
+          ${icon}
+        </button>
+      `).join('');
+      container.querySelectorAll('.avatar-option').forEach(btn => {
+        btn.addEventListener('click', () => onPick(btn.dataset.avatar));
+      });
+    }
 
     function refreshCurrentKidCard() {
       currentKid = Accounts.currentAccount();
       const avatar = currentKid?.avatar || '🦊';
       const color = currentKid?.color || 'var(--primary)';
+      avatarDraft = avatar;
       document.getElementById('btn-player').textContent = avatar;
       document.getElementById('btn-player').style.background = color;
       document.getElementById('player-card-avatar').textContent = avatar;
       document.getElementById('player-card-avatar').style.background = color;
       document.getElementById('player-card-name').textContent = Storage.getPlayerName();
       document.getElementById('player-card-age').textContent = `Age ${currentKid?.age ?? '—'}`;
+    }
+
+    function refreshAvatarEditor() {
+      const avatar = avatarDraft || currentKid?.avatar || '🦊';
+      const color = currentKid?.color || 'var(--primary)';
+      document.getElementById('edit-avatar-preview').textContent = avatar;
+      document.getElementById('edit-avatar-preview').style.background = color;
+      document.getElementById('edit-avatar-name').textContent = currentKid?.name || 'Kid';
+      renderAvatarOptions('edit-avatar-grid', avatar, nextAvatar => {
+        avatarDraft = nextAvatar;
+        refreshAvatarEditor();
+      });
     }
 
     function refreshAgeEditor() {
@@ -239,10 +285,15 @@
       refreshAgeEditor();
       show('sec-edit-age');
     });
+    document.getElementById('player-card-avatar-btn').addEventListener('click', () => {
+      avatarDraft = currentKid?.avatar || AVATAR_ICONS[0];
+      refreshAvatarEditor();
+      show('sec-edit-avatar');
+    });
 
     // --- Section navigation ---
     function show(id) {
-      ['sec-welcome', 'sec-level', 'sec-ops', 'sec-settings', 'sec-player', 'sec-edit-age'].forEach(s =>
+      ['sec-welcome', 'sec-level', 'sec-ops', 'sec-settings', 'sec-player', 'sec-edit-avatar', 'sec-edit-age'].forEach(s =>
         document.getElementById(s).classList.toggle('hidden', s !== id)
       );
       window.scrollTo(0, 0);
@@ -292,6 +343,7 @@
     // Cancel → discard draft, go home
     document.getElementById('back-from-settings').addEventListener('click', () => show('sec-welcome'));
     document.getElementById('back-from-player').addEventListener('click', () => show('sec-welcome'));
+    document.getElementById('back-from-edit-avatar').addEventListener('click', () => show('sec-player'));
     document.getElementById('back-from-edit-age').addEventListener('click', () => show('sec-welcome'));
 
     document.getElementById('btn-settings').addEventListener('click', openSettings);
@@ -321,6 +373,13 @@
       }
       Accounts.update(currentKid.name, { age: ageNum });
       refreshCurrentKidCard();
+      show('sec-player');
+    });
+
+    document.getElementById('btn-save-avatar').addEventListener('click', () => {
+      Accounts.update(currentKid.name, { avatar: avatarDraft });
+      refreshCurrentKidCard();
+      refreshAvatarEditor();
       show('sec-player');
     });
 
