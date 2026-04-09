@@ -73,6 +73,27 @@ body {
 
 .hidden { display: none !important; }
 
+.app-footer {
+  margin-top: 22px;
+  padding-bottom: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-light);
+  text-align: center;
+  opacity: 0.85;
+}
+
+.app-footer-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(99,110,114,0.35);
+}
+
+.app-footer-link:hover {
+  color: var(--primary-dark);
+  border-bottom-color: var(--primary-dark);
+}
+
 /* ============================================================
    HOME SCREEN
    ============================================================ */
@@ -130,7 +151,7 @@ body {
 /* Year buttons */
 .year-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 8px;
   width: 100%;
 }
@@ -155,6 +176,7 @@ body {
 .year-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
 .year-btn:active { transform: translateY(0); }
 .year-btn.selected { outline: 4px solid var(--text); outline-offset: 2px; }
+.year-btn[data-year="1"] { background: #F6C445; }
 .year-btn[data-year="2"] { background: #FF9F43; }
 .year-btn[data-year="3"] { background: #10AC84; }
 .year-btn[data-year="4"] { background: #5F27CD; }

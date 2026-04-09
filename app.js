@@ -3,6 +3,7 @@
 // ============================================================
 
 const YEAR_CONFIG = {
+  1: { max: 10,    ops: ['add'],                      label: 'Year 1', age: '5–6'  },
   2: { max: 20,    ops: ['add', 'sub'],               label: 'Year 2', age: '6–7'  },
   3: { max: 100,   ops: ['add', 'sub', 'mul'],        label: 'Year 3', age: '7–8'  },
   4: { max: 100,   ops: ['add', 'sub', 'mul', 'div'], label: 'Year 4', age: '8–9'  },
@@ -106,6 +107,108 @@ function samplePair(gen, predicates, difficulty) {
   return gen(); // last resort — any valid pair
 }
 
+function chanceForMissingOperand(difficulty) {
+  switch (difficulty) {
+    case 'medium': return 0.10;
+    case 'hard':   return 0.35;
+    case 'talent': return 0.55;
+    default:       return 0;
+  }
+}
+
+function buildAddQuestion(a, b, difficulty) {
+  const total = a + b;
+  const standard = `${a} ${OP_SYMBOLS.add} ${b} = ?`;
+  if (Math.random() >= chanceForMissingOperand(difficulty)) {
+    return { text: standard, answer: total, key: `add:${standard}:${total}` };
+  }
+  const variants = [`${a} ${OP_SYMBOLS.add} ? = ${total}`, `? ${OP_SYMBOLS.add} ${b} = ${total}`];
+  const text = randFrom(variants);
+  const answer =
+    text === `${a} ${OP_SYMBOLS.add} ? = ${total}` ? b :
+    text === `? ${OP_SYMBOLS.add} ${b} = ${total}` ? a :
+    total;
+  return { text, answer, key: `add:${text}:${answer}` };
+}
+
+function buildSubQuestion(a, b, difficulty) {
+  const diff = a - b;
+  const standard = `${a} ${OP_SYMBOLS.sub} ${b} = ?`;
+  if (Math.random() >= chanceForMissingOperand(difficulty)) {
+    return { text: standard, answer: diff, key: `sub:${standard}:${diff}` };
+  }
+  const variants = [`${a} ${OP_SYMBOLS.sub} ? = ${diff}`, `? ${OP_SYMBOLS.sub} ${b} = ${diff}`];
+  const text = randFrom(variants);
+  const answer =
+    text === `${a} ${OP_SYMBOLS.sub} ? = ${diff}` ? b :
+    text === `? ${OP_SYMBOLS.sub} ${b} = ${diff}` ? a :
+    diff;
+  return { text, answer, key: `sub:${text}:${answer}` };
+}
+
+function buildTalentExpressionQuestion(year, op) {
+  const { max } = YEAR_CONFIG[year];
+
+  if (op === 'add') {
+    for (let i = 0; i < 100; i++) {
+      const a = randInt(2, Math.max(3, Math.floor(max * 0.5)));
+      const b = randInt(1, Math.max(2, Math.floor(max * 0.4)));
+      const canUsePlusPlus = a + b + 1 <= max;
+      const canUsePlusMinus = a + b - 1 >= 0;
+      const usePlusMinus = canUsePlusMinus && (!canUsePlusPlus || Math.random() < 0.5);
+
+      if (usePlusMinus) {
+        const c = randInt(1, a + b - 1);
+        const result = a + b - c;
+        if (result >= 0 && result <= max) {
+          return {
+            a, b, c, op, answer: result,
+            text: `${a} ${OP_SYMBOLS.add} ${b} ${OP_SYMBOLS.sub} ${c} = ?`,
+            key: `addmix:${a}:${b}:${c}:${result}`
+          };
+        }
+      }
+
+      const cMax = Math.max(1, max - a - b);
+      const c = randInt(1, cMax);
+      const total = a + b + c;
+      if (total <= max) {
+        return {
+          a, b, c, op, answer: total,
+          text: `${a} ${OP_SYMBOLS.add} ${b} ${OP_SYMBOLS.add} ${c} = ?`,
+          key: `add3:${a}:${b}:${c}:${total}`
+        };
+      }
+    }
+  }
+
+  if (op === 'sub') {
+    for (let i = 0; i < 120; i++) {
+      const a = randInt(3, max);
+      const b = randInt(1, a - 1);
+      const c = randInt(1, Math.max(1, max - a + b));
+      const addThenSub = a - b + c;
+      if (addThenSub >= 0 && addThenSub <= max) {
+        return {
+          a, b, c, op, answer: addThenSub,
+          text: `${a} ${OP_SYMBOLS.sub} ${b} ${OP_SYMBOLS.add} ${c} = ?`,
+          key: `submix:${a}:${b}:${c}:${addThenSub}`
+        };
+      }
+      const subThenSub = a - b - c;
+      if (subThenSub >= 0) {
+        return {
+          a, b, c, op, answer: subThenSub,
+          text: `${a} ${OP_SYMBOLS.sub} ${b} ${OP_SYMBOLS.sub} ${c} = ?`,
+          key: `sub3:${a}:${b}:${c}:${subThenSub}`
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
 // ============================================================
 // QUESTION GENERATION
 // ============================================================
@@ -122,6 +225,10 @@ function generateQuestion(year, op, difficulty = 'medium') {
     // Hard:   1 carry, both ≥ 10        (47 + 35 = 82)
     // Talent: 2+ carries                (86 + 75 = 161)
     case 'add': {
+      if (difficulty === 'talent') {
+        const talentQ = buildTalentExpressionQuestion(year, 'add');
+        if (talentQ) return talentQ;
+      }
       const { a: ra, b: rb } = samplePair(
         () => { const a = randInt(1, max - 1); return { a, b: randInt(1, max - a) }; },
         {
@@ -132,7 +239,10 @@ function generateQuestion(year, op, difficulty = 'medium') {
         },
         difficulty
       );
-      a = ra; b = rb; answer = a + b;
+      a = ra; b = rb;
+      const q = buildAddQuestion(a, b, difficulty);
+      answer = q.answer;
+      return { a, b, op, answer, text: q.text, key: q.key };
       break;
     }
 
@@ -142,6 +252,10 @@ function generateQuestion(year, op, difficulty = 'medium') {
     // Hard:   1 borrow, both ≥ 10       (54 − 28 = 26)
     // Talent: 2+ borrows                (304 − 187 = 117)
     case 'sub': {
+      if (difficulty === 'talent') {
+        const talentQ = buildTalentExpressionQuestion(year, 'sub');
+        if (talentQ) return talentQ;
+      }
       const { a: ra, b: rb } = samplePair(
         () => { const a = randInt(2, max); return { a, b: randInt(1, a - 1) }; },
         {
@@ -152,7 +266,10 @@ function generateQuestion(year, op, difficulty = 'medium') {
         },
         difficulty
       );
-      a = ra; b = rb; answer = a - b;
+      a = ra; b = rb;
+      const q = buildSubQuestion(a, b, difficulty);
+      answer = q.answer;
+      return { a, b, op, answer, text: q.text, key: q.key };
       break;
     }
 
