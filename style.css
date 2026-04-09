@@ -323,6 +323,11 @@ body {
   transform: translateY(-2px);
 }
 
+.sound-toggle-btn.muted {
+  opacity: 0.72;
+  background: rgba(255,255,255,0.78);
+}
+
 .avatar-edit-trigger {
   border: none;
   background: transparent;

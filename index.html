@@ -14,11 +14,14 @@
   <div id="sec-welcome" class="screen" style="padding-top:16px">
 
     <!-- Top actions -->
-    <div style="width:100%;display:flex;justify-content:flex-end;gap:8px">
-      <button id="btn-history" class="settings-btn" title="History">🕘</button>
-      <button id="btn-analytics" class="settings-btn" title="Analysis">📊</button>
-      <button id="btn-settings" class="settings-btn" title="Settings">⚙️</button>
-      <button id="btn-player" class="settings-btn player-menu-btn" title="Who's Playing">👤</button>
+    <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <button id="btn-sound" class="settings-btn sound-toggle-btn" title="Sound on">🔊</button>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button id="btn-history" class="settings-btn" title="History">🕘</button>
+        <button id="btn-analytics" class="settings-btn" title="Analysis">📊</button>
+        <button id="btn-settings" class="settings-btn" title="Settings">⚙️</button>
+        <button id="btn-player" class="settings-btn player-menu-btn" title="Who's Playing">👤</button>
+      </div>
     </div>
 
     <div class="mascot">🦉</div>
@@ -129,14 +132,6 @@
         <button class="chip" data-value="90">90 s</button>
         <button class="chip" data-value="120">120 s</button>
         <button class="chip" data-value="0">∞ No limit</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="setting-label">Sound</div>
-      <div class="chip-group" data-setting="soundEnabled">
-        <button class="chip" data-value="true">🔊 On</button>
-        <button class="chip" data-value="false">🔇 Off</button>
       </div>
     </div>
 
@@ -254,6 +249,14 @@
       document.getElementById('player-card-age').textContent = `Age ${currentKid?.age ?? '—'}`;
     }
 
+    function refreshSoundToggle() {
+      const enabled = Settings.get('soundEnabled');
+      const btn = document.getElementById('btn-sound');
+      btn.textContent = enabled ? '🔊' : '🔇';
+      btn.title = enabled ? 'Sound on' : 'Sound off';
+      btn.classList.toggle('muted', !enabled);
+    }
+
     function refreshAvatarEditor() {
       const avatar = avatarDraft || currentKid?.avatar || '🦊';
       const color = currentKid?.color || 'var(--primary)';
@@ -300,7 +303,7 @@
     }
 
     // --- Settings (draft pattern: changes only saved on "Save Settings") ---
-    const SETTING_KEYS = ['practiceCount', 'testCount', 'difficulty', 'timerSeconds', 'soundEnabled'];
+    const SETTING_KEYS = ['practiceCount', 'testCount', 'difficulty', 'timerSeconds'];
     let draft = {};
 
     function parseChipValue(v) {
@@ -347,6 +350,12 @@
     document.getElementById('back-from-edit-age').addEventListener('click', () => show('sec-welcome'));
 
     document.getElementById('btn-settings').addEventListener('click', openSettings);
+    document.getElementById('btn-sound').addEventListener('click', () => {
+      const next = !Settings.get('soundEnabled');
+      Settings.set('soundEnabled', next);
+      refreshSoundToggle();
+      if (next) playSound('numpad');
+    });
     document.getElementById('btn-player').addEventListener('click', () => show('sec-player'));
     document.getElementById('btn-history').addEventListener('click', () => { window.location.href = 'history.html'; });
     document.getElementById('btn-analytics').addEventListener('click', () => { window.location.href = 'analytics.html'; });
@@ -384,6 +393,7 @@
     });
 
     // --- Year selection ---
+    refreshSoundToggle();
     document.querySelectorAll('.year-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         selectedYear = Number(btn.dataset.year);
