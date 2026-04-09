@@ -19,9 +19,9 @@ Live demo: [https://vietha.github.io/Kid-Learning-Math-App/index.html](https://v
 
 <p align="center">
   <img src="images/math-champions-home-page.png" alt="Math Champions home page" width="24%">
-  <img src="images/math-champions-history-page.png" alt="Math Champions history page" width="24%">
-  <img src="images/math-champions-stats-page.png" alt="Math Champions analysis page" width="24%">
   <img src="images/math-champions-settings-page.png" alt="Math Champions settings page" width="24%">
+  <img src="images/math-champions-stats-page.png" alt="Math Champions analysis page" width="24%">
+  <img src="images/math-champions-history-page.png" alt="Math Champions history page" width="24%">
 </p>
 
 From kid login and year-level selection to settings, history, and per-kid analysis, the app is designed to feel simple, cheerful, and easy to use on tablets and phones.
