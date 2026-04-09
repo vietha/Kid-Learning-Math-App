@@ -196,13 +196,14 @@
     function goToResults() {
       const timeTaken   = stopElapsed();
       const opBreakdown = computeOpBreakdown(session.answers);
+      const resultId    = Date.now();
 
       // Persist wrong questions for the review feature
       Storage.setWrongQuestions(session.answers.filter(a => !a.correct).map(a => a.question));
 
       // Save full result to history
       Storage.saveTestResult({
-        id:          Date.now(),
+        id:          resultId,
         date:        new Date().toISOString(),
         year,
         difficulty,
@@ -222,7 +223,8 @@
         total: COUNT,
         stars: session.stars,
         best:  isNewBest ? 1 : 0,
-        time:  timeTaken
+        time:  timeTaken,
+        resultId
       });
     }
 

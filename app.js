@@ -215,6 +215,7 @@ function buildTalentExpressionQuestion(year, op) {
 
 function generateQuestion(year, op, difficulty = 'medium') {
   const { max } = YEAR_CONFIG[year];
+  const effectiveDifficulty = (year === 1 && (op === 'add' || op === 'sub')) ? 'easy' : difficulty;
   let a, b, answer;
 
   switch (op) {
@@ -237,10 +238,10 @@ function generateQuestion(year, op, difficulty = 'medium') {
           hard:   (a, b) => carryCount(a, b) === 1 && a >= 10 && b >= 10,
           talent: (a, b) => carryCount(a, b) >= 2,
         },
-        difficulty
+        effectiveDifficulty
       );
       a = ra; b = rb;
-      const q = buildAddQuestion(a, b, difficulty);
+      const q = buildAddQuestion(a, b, effectiveDifficulty);
       answer = q.answer;
       return { a, b, op, answer, text: q.text, key: q.key };
       break;
@@ -264,10 +265,10 @@ function generateQuestion(year, op, difficulty = 'medium') {
           hard:   (a, b) => borrowCount(a, b) === 1 && a >= 10 && b >= 10,
           talent: (a, b) => borrowCount(a, b) >= 2,
         },
-        difficulty
+        effectiveDifficulty
       );
       a = ra; b = rb;
-      const q = buildSubQuestion(a, b, difficulty);
+      const q = buildSubQuestion(a, b, effectiveDifficulty);
       answer = q.answer;
       return { a, b, op, answer, text: q.text, key: q.key };
       break;
@@ -564,6 +565,7 @@ function getParams() {
     stars: p.has('stars') ? Number(p.get('stars')) : null,
     best:  p.has('best')  ? Number(p.get('best'))  : 0,
     time:  p.has('time')  ? Number(p.get('time'))  : null,
+    resultId: p.has('resultId') ? Number(p.get('resultId')) : null,
   };
 }
 

@@ -61,7 +61,7 @@
     requireLogin();
 
     const params = getParams();
-    const { year, op, mode, score, total, stars, best, time } = params;
+    const { year, op, mode, score, total, stars, best, time, resultId } = params;
 
     const safeScore = score ?? 0;
     const safeTotal = total ?? 10;
@@ -98,15 +98,15 @@
       el.classList.remove('hidden');
     }
 
-    // Per-operation breakdown (read from latest history entry)
+    // Per-operation breakdown for this exact completed test
     if (mode === 'test') {
-      const latest = Storage.getTestHistory()[0];
-      if (latest && latest.opBreakdown) {
+      const result = Storage.getTestHistory().find(entry => entry.id === resultId) || null;
+      if (result && result.opBreakdown) {
         const rows = document.getElementById('op-breakdown-rows');
         rows.innerHTML = ['add','sub','mul','div']
-          .filter(op => latest.opBreakdown[op])
+          .filter(op => result.opBreakdown[op])
           .map(op => {
-            const { correct, total: t } = latest.opBreakdown[op];
+            const { correct, total: t } = result.opBreakdown[op];
             const pct = Math.round(correct / t * 100);
             return `
               <div class="op-result-row">
