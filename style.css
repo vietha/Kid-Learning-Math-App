@@ -1033,74 +1033,47 @@ body {
   min-width: 96px;
 }
 
-.activity-chart-copy {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text-light);
-  line-height: 1.45;
-  margin-bottom: 16px;
+.activity-line-chart {
+  width: 100%;
+  min-height: 200px;
 }
 
-.activity-chart {
-  display: grid;
-  grid-template-columns: repeat(14, minmax(0, 1fr));
-  gap: 8px;
-  align-items: end;
-  min-height: 170px;
+.activity-svg {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
-.activity-day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+.activity-axis-line {
+  stroke: #d7d7d7;
+  stroke-width: 2;
 }
 
-.activity-bars {
-  height: 128px;
-  display: flex;
-  align-items: end;
-  justify-content: center;
-  gap: 4px;
+.activity-guide-line {
+  stroke: rgba(103, 113, 121, 0.18);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
 }
 
-.activity-bar {
-  width: 10px;
-  border-radius: 999px 999px 4px 4px;
-  min-height: 0;
+.activity-line-path {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.activity-bar.practice { background: var(--primary); }
-.activity-bar.test     { background: var(--mul); }
+.activity-line-dot {
+  fill: var(--primary);
+  stroke: white;
+  stroke-width: 2;
+}
 
-.activity-day-label {
-  font-size: 0.64rem;
+.activity-axis-label {
+  fill: var(--text-light);
+  font-size: 12px;
   font-weight: 800;
-  color: var(--text-light);
-  text-align: center;
-  line-height: 1.1;
 }
-
-.activity-chart-legend {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 16px;
-}
-
-.legend-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: 999px;
-  padding: 5px 10px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: white;
-}
-
-.legend-pill.practice { background: var(--primary); }
-.legend-pill.test     { background: var(--mul); }
 
 /* Clear button */
 .clear-btn {
@@ -1186,10 +1159,6 @@ body {
 
   .stat-row {
     grid-template-columns: 1fr;
-  }
-
-  .activity-chart {
-    gap: 6px;
   }
 
   .history-item-top,
@@ -1291,13 +1260,6 @@ body {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .activity-chart {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-  }
-
-  .activity-day:nth-child(n+8) {
-    display: none;
-  }
 }
 
 /* ============================================================

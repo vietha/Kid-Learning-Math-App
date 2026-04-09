@@ -69,6 +69,16 @@
       </div>
 
       <div class="card">
+        <div class="setting-label" style="margin-bottom:14px">Activity frequency</div>
+        <div class="chip-group activity-type-filter" style="margin-bottom:14px">
+          <button class="chip selected" data-activity-type="both">Both</button>
+          <button class="chip" data-activity-type="practice">Practice</button>
+          <button class="chip" data-activity-type="test">Test</button>
+        </div>
+        <div id="activity-line-chart" class="activity-line-chart"></div>
+      </div>
+
+      <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px">
           <div class="setting-label" style="margin-bottom:0">Session history</div>
           <button id="btn-clear" class="clear-btn">🗑️ Clear all</button>
@@ -93,11 +103,21 @@
 
     const activity = Storage.getActivityHistory();
     let activeRange = 7;
+    let activeActivityType = 'both';
 
     document.querySelectorAll('.history-filter-group .chip').forEach(chip => {
       chip.addEventListener('click', () => {
         activeRange = Number(chip.dataset.range);
         document.querySelectorAll('.history-filter-group .chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        render();
+      });
+    });
+
+    document.querySelectorAll('.activity-type-filter .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        activeActivityType = chip.dataset.activityType;
+        document.querySelectorAll('.activity-type-filter .chip').forEach(c => c.classList.remove('selected'));
         chip.classList.add('selected');
         render();
       });
@@ -117,6 +137,7 @@
       empty.classList.add('hidden');
       content.classList.remove('hidden');
       renderSummary(filtered);
+      renderActivityChart(filtered);
       renderHistoryList(filtered);
     }
 
@@ -165,6 +186,61 @@
             </div>
           </div>`;
       }).join('');
+    }
+
+    function renderActivityChart(filtered) {
+      const chart = document.getElementById('activity-line-chart');
+      const points = buildActivityChartData(filtered, activeRange, activeActivityType);
+      const width = 520;
+      const height = 180;
+      const padX = 18;
+      const padTop = 20;
+      const padBottom = 36;
+      const innerWidth = width - padX * 2;
+      const innerHeight = height - padTop - padBottom;
+      const maxY = Math.max(1, ...points.map(point => point.total));
+      const midY = padTop + innerHeight / 2;
+      const activeCoords = [];
+
+      const coords = points.map((point, index) => {
+        const x = padX + (points.length === 1 ? innerWidth / 2 : (index / (points.length - 1)) * innerWidth);
+        const y = padTop + innerHeight - ((point.total / maxY) * innerHeight);
+        const coord = { ...point, x, y };
+        if (point.total > 0) activeCoords.push(coord);
+        return coord;
+      });
+      const polyline = activeCoords.map(point => `${point.x},${point.y}`).join(' ');
+
+      const labelIndexes = [...new Set([0, Math.floor((points.length - 1) / 2), points.length - 1])];
+      const labels = labelIndexes.map(i => {
+        const point = coords[i];
+        return `<text x="${point.x}" y="${height - 10}" text-anchor="middle" class="activity-axis-label">${point.label}</text>`;
+      }).join('');
+
+      const dots = activeCoords.map(point => `
+        <circle cx="${point.x}" cy="${point.y}" r="4" class="activity-line-dot">
+          <title>${point.label}: ${point.total} session${point.total === 1 ? '' : 's'}</title>
+        </circle>
+      `).join('');
+      const guideLabels = [
+        { y: padTop + 4, value: maxY },
+        { y: midY + 4, value: maxY > 1 ? Math.ceil(maxY / 2) : 0 },
+        { y: padTop + innerHeight + 4, value: 0 }
+      ].map(label => `
+        <text x="${padX - 4}" y="${label.y}" text-anchor="end" class="activity-axis-label">${label.value}</text>
+      `).join('');
+
+      chart.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" class="activity-svg" aria-label="Activity frequency line chart">
+          <line x1="${padX}" y1="${padTop}" x2="${width - padX}" y2="${padTop}" class="activity-guide-line"></line>
+          <line x1="${padX}" y1="${midY}" x2="${width - padX}" y2="${midY}" class="activity-guide-line"></line>
+          <line x1="${padX}" y1="${padTop + innerHeight}" x2="${width - padX}" y2="${padTop + innerHeight}" class="activity-axis-line"></line>
+          ${activeCoords.length > 1 ? `<polyline points="${polyline}" class="activity-line-path"></polyline>` : ''}
+          ${guideLabels}
+          ${dots}
+          ${labels}
+        </svg>
+      `;
     }
 
     document.getElementById('btn-clear').addEventListener('click', () => {

@@ -701,27 +701,51 @@ function filterActivityByDays(activity, days) {
   });
 }
 
-function buildActivityChartData(activity, days = 14) {
+function localDateKey(dateLike) {
+  const d = new Date(dateLike);
+  if (!Number.isFinite(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function buildActivityChartData(activity, days = 14, type = 'both') {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  let resolvedDays = days;
+  if (!resolvedDays) {
+    const dated = activity
+      .map(item => Date.parse(item.date || ''))
+      .filter(time => Number.isFinite(time))
+      .sort((a, b) => a - b);
+    if (!dated.length) return [];
+    const oldest = new Date(dated[0]);
+    oldest.setHours(0, 0, 0, 0);
+    resolvedDays = Math.max(1, Math.round((today - oldest) / (24 * 60 * 60 * 1000)) + 1);
+  }
   const buckets = [];
-  for (let i = days - 1; i >= 0; i--) {
+  for (let i = resolvedDays - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
     buckets.push({
-      key: d.toISOString().slice(0, 10),
+      key: localDateKey(d),
       label: d.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' }),
       practice: 0,
-      test: 0
+      test: 0,
+      total: 0
     });
   }
   const byKey = Object.fromEntries(buckets.map(b => [b.key, b]));
   for (const item of activity) {
-    const key = (item.date || '').slice(0, 10);
+    const key = localDateKey(item.date);
     const bucket = byKey[key];
     if (!bucket) continue;
     if (item.kind === 'test') bucket.test++;
     else bucket.practice++;
+    if (type === 'practice') bucket.total = bucket.practice;
+    else if (type === 'test') bucket.total = bucket.test;
+    else bucket.total = bucket.practice + bucket.test;
   }
   return buckets;
 }

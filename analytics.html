@@ -44,16 +44,6 @@
     </div>
 
     <div id="content" style="width:100%;display:flex;flex-direction:column;gap:16px">
-      <div class="card">
-        <div class="setting-label" style="margin-bottom:14px">Activity frequency</div>
-        <div class="activity-chart-copy">Suggested view: a 14-day bar chart split into practice and test sessions so parents can quickly spot routine and consistency.</div>
-        <div id="activity-chart" class="activity-chart"></div>
-        <div class="activity-chart-legend">
-          <span class="legend-pill practice">Practice</span>
-          <span class="legend-pill test">Test</span>
-        </div>
-      </div>
-
       <div id="analytics-sections" class="hidden" style="width:100%;display:flex;flex-direction:column;gap:16px">
         <div class="stat-row">
           <div class="stat-card">
@@ -110,10 +100,7 @@
     });
 
     const testHistory = Storage.getTestHistory();
-    const activityHistory = Storage.getActivityHistory();
     const analytics = computeHistoryAnalytics(testHistory);
-
-    renderActivityChart();
 
     if (!testHistory.length) {
       document.getElementById('empty-state').classList.remove('hidden');
@@ -123,24 +110,6 @@
       renderOpAccuracy();
       renderSummary();
       renderTrend();
-    }
-
-    function renderActivityChart() {
-      const chart = document.getElementById('activity-chart');
-      const points = buildActivityChartData(activityHistory, 14);
-      const maxCount = Math.max(1, ...points.map(p => p.practice + p.test));
-      chart.innerHTML = points.map(point => {
-        const practiceHeight = Math.max(point.practice ? 12 : 0, Math.round((point.practice / maxCount) * 120));
-        const testHeight = Math.max(point.test ? 12 : 0, Math.round((point.test / maxCount) * 120));
-        return `
-          <div class="activity-day" title="${point.label}: ${point.practice} practice, ${point.test} tests">
-            <div class="activity-bars">
-              <span class="activity-bar practice" style="height:${practiceHeight}px"></span>
-              <span class="activity-bar test" style="height:${testHeight}px"></span>
-            </div>
-            <span class="activity-day-label">${point.label.replace(' ', '<br>')}</span>
-          </div>`;
-      }).join('');
     }
 
     function renderStats() {
