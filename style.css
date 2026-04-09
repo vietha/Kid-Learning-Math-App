@@ -339,12 +339,26 @@ body {
   color: var(--text);
 }
 
+.current-kid-age {
+  margin-top: 3px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
 .current-kid-subtitle {
   margin-top: 4px;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-light);
   line-height: 1.4;
+}
+
+.current-kid-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .switch-kid-btn {
@@ -990,6 +1004,10 @@ body {
   }
 
   .switch-kid-btn {
+    width: 100%;
+  }
+
+  .current-kid-actions {
     width: 100%;
   }
 

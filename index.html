@@ -32,9 +32,13 @@
         <div id="current-kid-avatar" class="mini-avatar-circle">🦊</div>
         <div>
           <div id="current-kid-name" class="current-kid-name">Kid</div>
+          <div id="current-kid-age" class="current-kid-age">Age 8</div>
           <div class="current-kid-subtitle">History, scores, and settings stay saved for this kid.</div>
         </div>
-        <button id="btn-switch-kid" class="switch-kid-btn">Switch Kid</button>
+        <div class="current-kid-actions">
+          <button id="btn-edit-age" class="switch-kid-btn">Edit Age</button>
+          <button id="btn-switch-kid" class="switch-kid-btn">Switch Kid</button>
+        </div>
       </div>
     </div>
 
@@ -153,23 +157,78 @@
 
   </div>
 
+  <div id="sec-edit-age" class="screen hidden">
+
+    <button class="back-btn" id="back-from-edit-age">← Back</button>
+
+    <div id="edit-age-avatar" class="login-avatar-circle" style="animation:none">🦊</div>
+    <div id="edit-age-name" class="login-greeting">Kid</div>
+    <div class="app-subtitle">Update age for login and profile</div>
+
+    <div class="card" style="text-align:center;width:100%">
+      <div class="setting-label" style="margin-bottom:10px">Current age</div>
+      <div id="edit-age-display" class="age-display">_</div>
+      <div id="edit-age-error" class="age-error hidden">Please enter a valid age (1–18).</div>
+    </div>
+
+    <div class="numpad-wrap">
+      <div class="numpad">
+        <button class="num-btn" data-age-val="7">7</button>
+        <button class="num-btn" data-age-val="8">8</button>
+        <button class="num-btn" data-age-val="9">9</button>
+        <button class="num-btn" data-age-val="4">4</button>
+        <button class="num-btn" data-age-val="5">5</button>
+        <button class="num-btn" data-age-val="6">6</button>
+        <button class="num-btn" data-age-val="1">1</button>
+        <button class="num-btn" data-age-val="2">2</button>
+        <button class="num-btn" data-age-val="3">3</button>
+        <button class="num-btn backspace" id="edit-age-back">⌫</button>
+        <button class="num-btn" data-age-val="0">0</button>
+        <button class="num-btn submit" id="edit-age-save">✓</button>
+      </div>
+    </div>
+
+  </div>
+
   <script src="app.js"></script>
   <script>
     requireLogin();
 
     let selectedYear = null;
-    const currentKid = Accounts.currentAccount();
-    document.getElementById('current-kid-avatar').textContent = currentKid?.avatar || '🦊';
-    document.getElementById('current-kid-avatar').style.background = currentKid?.color || 'var(--primary)';
-    document.getElementById('current-kid-name').textContent = Storage.getPlayerName();
+    let currentKid = Accounts.currentAccount();
+    let ageDraft = '';
+
+    function refreshCurrentKidCard() {
+      currentKid = Accounts.currentAccount();
+      document.getElementById('current-kid-avatar').textContent = currentKid?.avatar || '🦊';
+      document.getElementById('current-kid-avatar').style.background = currentKid?.color || 'var(--primary)';
+      document.getElementById('current-kid-name').textContent = Storage.getPlayerName();
+      document.getElementById('current-kid-age').textContent = `Age ${currentKid?.age ?? '—'}`;
+    }
+
+    function refreshAgeEditor() {
+      document.getElementById('edit-age-avatar').textContent = currentKid?.avatar || '🦊';
+      document.getElementById('edit-age-avatar').style.background = currentKid?.color || 'var(--primary)';
+      document.getElementById('edit-age-name').textContent = currentKid?.name || 'Kid';
+      document.getElementById('edit-age-display').textContent = ageDraft || '_';
+      document.getElementById('edit-age-display').classList.toggle('has-value', ageDraft.length > 0);
+    }
+
+    refreshCurrentKidCard();
     document.getElementById('btn-switch-kid').addEventListener('click', () => {
       Accounts.logout();
       window.location.replace('login.html');
     });
+    document.getElementById('btn-edit-age').addEventListener('click', () => {
+      ageDraft = currentKid?.age ? String(currentKid.age) : '';
+      document.getElementById('edit-age-error').classList.add('hidden');
+      refreshAgeEditor();
+      show('sec-edit-age');
+    });
 
     // --- Section navigation ---
     function show(id) {
-      ['sec-welcome', 'sec-level', 'sec-ops', 'sec-settings'].forEach(s =>
+      ['sec-welcome', 'sec-level', 'sec-ops', 'sec-settings', 'sec-edit-age'].forEach(s =>
         document.getElementById(s).classList.toggle('hidden', s !== id)
       );
       window.scrollTo(0, 0);
@@ -218,9 +277,35 @@
 
     // Cancel → discard draft, go home
     document.getElementById('back-from-settings').addEventListener('click', () => show('sec-welcome'));
+    document.getElementById('back-from-edit-age').addEventListener('click', () => show('sec-welcome'));
 
     document.getElementById('btn-settings').addEventListener('click', openSettings);
     document.getElementById('btn-history').addEventListener('click', () => { window.location.href = 'history.html'; });
+
+    document.querySelectorAll('.num-btn[data-age-val]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (ageDraft.length >= 2) return;
+        ageDraft += btn.dataset.ageVal;
+        refreshAgeEditor();
+        playSound('numpad');
+      });
+    });
+
+    document.getElementById('edit-age-back').addEventListener('click', () => {
+      ageDraft = ageDraft.slice(0, -1);
+      refreshAgeEditor();
+    });
+
+    document.getElementById('edit-age-save').addEventListener('click', () => {
+      const ageNum = Number(ageDraft);
+      if (!ageDraft || ageNum < 1 || ageNum > 18) {
+        document.getElementById('edit-age-error').classList.remove('hidden');
+        return;
+      }
+      Accounts.update(currentKid.name, { age: ageNum });
+      refreshCurrentKidCard();
+      show('sec-welcome');
+    });
 
     // --- Year selection ---
     document.querySelectorAll('.year-btn').forEach(btn => {
